@@ -1,0 +1,7 @@
+**
+!Dockerfile
+!docker/
+!docker/ros_smoke.py
+!docker/setup.bash
+!docker/entrypoint.bash
+!docker/dev_check.bash

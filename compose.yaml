@@ -1,0 +1,53 @@
+name: itri-retail
+
+x-dev: &dev
+  image: itri-retail-robot:humble-dev
+  build:
+    context: .
+    target: dev
+    args:
+      USER_UID: ${LOCAL_UID:-1000}
+      USER_GID: ${LOCAL_GID:-1000}
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment:
+    ROS_LOCALHOST_ONLY: "1"
+    ROS_DOMAIN_ID: "82"
+    RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    PYTHONDONTWRITEBYTECODE: "1"
+  volumes:
+    - .:/workspace
+  working_dir: /workspace/ros2_ws
+
+services:
+  ros-smoke:
+    image: itri-retail-robot:ros-smoke
+    build:
+      context: .
+      target: smoke
+    network_mode: none
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      ROS_LOCALHOST_ONLY: "1"
+      ROS_DOMAIN_ID: "82"
+    command: ["python3", "/opt/itri/ros_smoke.py"]
+
+  # One-off shell with outbound network for vcs/rosdep. No host networking/devices.
+  dev:
+    <<: *dev
+    profiles: [dev]
+    stdin_open: true
+    tty: true
+    command: ["bash"]
+
+  # Offline acceptance uses the same toolchain, with its own isolated ROS graph.
+  dev-check:
+    <<: *dev
+    profiles: [test]
+    network_mode: none
+    command: ["bash", "/opt/itri/dev_check.bash"]

@@ -1,0 +1,19 @@
+# Source inventory; import OUTSIDE ros2_ws/src to avoid nested/duplicate packages.
+# vcs import external < dependencies.repos
+repositories:
+  openarm_dev:
+    type: git
+    url: https://github.com/hrc-pme/openarm_dev.git
+    version: 3eaa3361d84866394ff5fa9865514aed80af4833
+  social-safety-decision:
+    type: git
+    url: https://github.com/Laiting20021202/social-safety-decision.git
+    version: 783b5d986487cd66b3e6f333875c631bbe0f9b64
+  VLMotion_VQA:
+    type: git
+    url: https://github.com/LesterLiou/VLMotion_VQA.git
+    version: 889558ff0ff5f43c818ce82aa39b7b95734e7e6e
+  tidybot_ros2_control:
+    type: git
+    url: https://github.com/Li-ChengWang/tidybot_ros2_control.git
+    version: 195a46e5770e56ac35fb7fa437bb7fbad7d434b1

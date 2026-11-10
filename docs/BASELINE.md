@@ -1,0 +1,75 @@
+# 整合開發基線
+
+查證日期：2026-11-10（Asia/Taipei）。本次範圍是 **P0 CPU Docker 開發環境及來源接點查證**；下列「程式已確認」不等於硬體／模型 runtime 已驗收。原設計書是既有資料，不能以其快照取代本次查證。
+
+## 已查證事實：本機
+
+| 項目 | 實際結果 |
+|---|---|
+| 路徑 | `/home/lester/obstacle_avoid` |
+| Git | `git status --short --branch` 與 `git rev-parse HEAD` 均 exit 128：not a git repository。沒有可記錄的整合 HEAD；未修改 `.git` |
+| 原始檔案 | `AGENTS.md`、`CODEX_PROMPTS.md`、系統設計、Docker 驗收說明、VQA 候選 prompt、最小 Dockerfile／Compose／smoke；沒有 `BASELINE.md` 或 ROS 套件 |
+| OS／架構 | Ubuntu 22.04.5 LTS，`x86_64`，kernel `6.8.0-138-generic` |
+| ROS | 宿主機未找到 `ros2` 或 `/opt/ros`；本次採容器內 ROS，不安裝宿主 ROS |
+| Docker | client／server Engine 29.1.3，API 1.52，linux/amd64；Compose v2.39.2 |
+| 權限 | 沙箱直接存取 daemon 回報 permission denied；經工具執行權限核准後可用。未改 socket 權限／群組，未停用其他容器 |
+| ROS 基底 | 官方 `ros:humble-ros-base-jammy` 已拉取並以 manifest digest `sha256:d9bcf2e6f72df127fdee07048c2e87b1b4b9a59a74af0592f4489fc2844aa855` 鎖在 Dockerfile |
+| Python／RMW | 開發設計選 Humble 的系統 Python 3.10、`rmw_cyclonedds_cpp`；實際套件版本由容器驗收輸出記錄 |
+| 其他電腦 | 未連線 OpenArm NUC、TidyBot NUC 或 Thor；不能把本機規格視為三機規格 |
+
+## 已查證事實：上游來源
+
+透過 GitHub connector 讀取 branch API、recursive tree 及以下檔案，未修改上游。四個 SHA 已寫入 `dependencies.repos`。本次未 clone 四份來源進工作區、未下載權重、未執行上游硬體 launch。
+
+| Repo／本次 SHA | 套件與入口 | 環境／需求與測試邊界 |
+|---|---|---|
+| [OpenArm](https://github.com/hrc-pme/openarm_dev/tree/3eaa3361d84866394ff5fa9865514aed80af4833) `3eaa3361d84866394ff5fa9865514aed80af4833` | `ros2_ws/src/openarm_ros2/openarm_bringup/launch/openarm.bimanual.launch.py`；雙臂 MoveIt 設定；`openarm_hardware` 依賴 `openarm_can` | README 指 Humble／RealSense 2.56.1／CUDA 12.8 PyTorch 開發映像；不表示這些 GPU 依賴是 fake hardware 必需。上游 `colcon_build.sh:9,15,18` 有固定路徑、清除產物、先建 CAN；本次不執行 |
+| [避障](https://github.com/Laiting20021202/social-safety-decision/tree/783b5d986487cd66b3e6f333875c631bbe0f9b64) `783b5d986487cd66b3e6f333875c631bbe0f9b64` | `realtime_safety/pipeline/mast3r_slam_adapter.py`／worker；`openarm_isaac_sim_test/ros2_ws/src` 內 perception／safety／dynamic avoidance | README 明確區分 Gazebo 歷史驗證與待完成的 Isaac 手部閉環。本次僅讀碼；既有兩套 pytest 與 GPU 推論未執行 |
+| [VQA LesterVQA](https://github.com/LesterLiou/VLMotion_VQA/tree/889558ff0ff5f43c818ce82aa39b7b95734e7e6e) `889558ff0ff5f43c818ce82aa39b7b95734e7e6e` | `ros2_ws/src/lightweight_risk_vqa` 的 `robot_vqa.py`、受限制解碼器、UI；`test/test_robot_vqa.py` | `docs/INTERFACES.md` 說明兩個新 robot 模式 `vqa-only`／`yolo-assisted` 和既有 detector ROS adapter 是不同路徑。需 checkpoint／Qwen bundle；三視角需隔離時間序列狀態。本文未認證模型準確率 |
+| [TidyBot](https://github.com/Li-ChengWang/tidybot_ros2_control/tree/195a46e5770e56ac35fb7fa437bb7fbad7d434b1) `195a46e5770e56ac35fb7fa437bb7fbad7d434b1` | 根目錄 ROS 套件；`ros2_base_node.py`、`ros2_control_mux.py`、`launch/tidybot_docking.launch.py`；docking／battery tests | `ROS2_CONTROL.md` 提供 Humble／Python 3.10 路徑；Dockerfile 是 Jazzy／Noble。新 HEAD 相較既有設計書的 `207f07f…` 新增 battery monitoring。`requirements-ros2.txt` 鎖 numpy 1.26.4、threadpoolctl 3.5.0、ruckig 0.12.2、phoenix6 26.3.0。Humble 實際安裝仍待測 |
+
+MASt3R wrapper 已在避障 repo 找到：`infer()` 將 RGB、frame index、source timestamp 送入子程序，再產生 `PointCloudFrame`（[adapter:150](https://github.com/Laiting20021202/social-safety-decision/blob/783b5d986487cd66b3e6f333875c631bbe0f9b64/realtime_safety/pipeline/mast3r_slam_adapter.py#L150)）。這不是已驗收的 ROS `PointCloud2` 契約。`scripts/setup_mast3r_slam.sh` clone 未鎖 SHA 的公開上游，建立 venv、下載 checkpoint 並套 PyTorch 相容 patch；本次不執行，後續需另鎖其來源與模型。
+
+額外讀碼發現 `infer():164` 呼叫 `_receive(None)`，接收端只有 timeout 非空時才做 `select` 時限檢查；推論回覆未提供這個時限。後續整合提案是讓 ROS adapter 和健康監看維持獨立程序／有界佇列，外層以 deadline 拒絕過期結果、必要時終止 worker 並使場景失效；不能讓本機運動許可等待 GPU 返回。本次不修改上游實作，也不宣稱已驗證其卡住／重啟行為。
+
+## 已查證事實：介面接點
+
+下表是讀碼結果。QoS、逾時寫的是上游預設，**不是新的真機安全參數**。沒有 runtime 量測的停止時間全部待驗證。
+
+| 介面／方向 | 完整型別、單位／frame／時間 | 程式來源與行為 |
+|---|---|---|
+| 仲裁→底盤 `/cmd_vel` | `geometry_msgs/msg/Twist`；linear m/s、angular rad/s；無 Header，frame 由獨立狀態指定 | [base:32–72](https://github.com/Li-ChengWang/tidybot_ros2_control/blob/195a46e5770e56ac35fb7fa437bb7fbad7d434b1/ros2_base_node.py#L32)：depth 10；預設 command timeout 0.30 s。callback 接收逾時用 monotonic time；不是擷取時間契約 |
+| 仲裁→底盤 `/tidybot/enable` | `std_msgs/msg/Bool`；無 stamp | 同檔 61–66：RELIABLE、TRANSIENT_LOCAL、depth 1。上游已預設 require_enable=true；整合仍需本地租約／禁動邏輯，不能只信任殘留的 latched true |
+| 仲裁→底盤 `/tidybot/control_frame` | `std_msgs/msg/String`；預設 `local`，無 stamp | 同檔 51、61–66；RELIABLE、TRANSIENT_LOCAL、depth 1。整合統一 local，保留 x/y/yaw 全向速度 |
+| 底盤→系統 `/odom` | `nav_msgs/msg/Odometry`；預設 parent `odom`、child `base_link`，含 stamp；m／rad | 同檔 35–41、69–72、`_publish_odometry`；預設 30 Hz、depth 10。與 TF 的唯一發布者、共時偏移及可靠靜止判定需 runtime 核對 |
+| 手把／停靠→現有 mux | `/teleop/cmd_vel`、`/docking/cmd_vel` 為 `Twist` depth 1；enable／active 為 `Bool` | [mux:20–65](https://github.com/Li-ChengWang/tidybot_ros2_control/blob/195a46e5770e56ac35fb7fa437bb7fbad7d434b1/ros2_control_mux.py#L20)：command timeout 0.25 s、joy timeout 0.30 s；預設 require_gamepad=true，無 Nav2 輸入 |
+| 停靠↔mux `/docking/set_control` | `std_srvs/srv/SetBool`；grant topic `std_msgs/msg/Bool` | 同檔 55、64；控制權 lease 機制，不能視為已完成無人任務管理 |
+| MoveIt→左右 trajectory controller | `/left_joint_trajectory_controller/follow_joint_trajectory`、右臂對稱；`control_msgs/action/FollowJointTrajectory`；rad 與 trajectory time | [moveit_controllers.yaml:24](https://github.com/hrc-pme/openarm_dev/blob/3eaa3361d84866394ff5fa9865514aed80af4833/ros2_ws/src/openarm_ros2/openarm_bimanual_moveit_config/config/moveit_controllers.yaml#L24)：配置推導的非 namespace 名稱；自訂 namespace 時需重查。QoS、cancel→停止回饋未測 |
+| MoveIt→左右夾爪 | `/left_gripper_controller/gripper_cmd`、右臂對稱；`control_msgs/action/GripperCommand` | 同配置；名稱由 action_ns 推導。夾爪位置／力單位與硬體回饋需查 controller／URDF 並實測 |
+| 新 VQA 推論→adapter | Python dict，`STOP/DANGER_WARNING/CONTINUE/OBSERVE`；健康層 `DATA_LOSS` | [robot_vqa.py:49,123](https://github.com/LesterLiou/VLMotion_VQA/blob/889558ff0ff5f43c818ce82aa39b7b95734e7e6e/ros2_ws/src/lightweight_risk_vqa/lightweight_risk_vqa/robot_vqa.py#L123)。新模型 schema 未列 `NO_DETECT`。函式預設 frame/result age 2/8 s 是 UI 健康門檻，不沿用為底盤運動允許門檻 |
+| 既有 ROS VQA 路徑 | `sensor_msgs/msg/Image` 或 `CompressedImage` → `/future_risk/{decision,action}` `std_msgs/msg/String` | [INTERFACES.md](https://github.com/LesterLiou/VLMotion_VQA/blob/889558ff0ff5f43c818ce82aa39b7b95734e7e6e/ros2_ws/src/lightweight_risk_vqa/docs/INTERFACES.md)。需區分舊 temporal 與新 ConvLSTM robot 模型；新 adapter 未實作 |
+| 避障→場景 | `moveit_msgs/msg/PlanningScene`，topic 名取 safety config；`/openarm/dynamic_avoidance/collision_object` `moveit_msgs/msg/CollisionObject` | [safety node:99–138](https://github.com/Laiting20021202/social-safety-decision/blob/783b5d986487cd66b3e6f333875c631bbe0f9b64/openarm_isaac_sim_test/ros2_ws/src/openarm_safety_bridge/openarm_safety_bridge/node.py#L99)：depth 10；planning frame 來自 config，來源／有效期及衝突處理須 adapter 驗證 |
+
+OpenArm bringup 已確認 `use_fake_hardware` **預設 false**，controller 預設 `joint_trajectory_controller`（[launch](https://github.com/hrc-pme/openarm_dev/blob/3eaa3361d84866394ff5fa9865514aed80af4833/ros2_ws/src/openarm_ros2/openarm_bringup/launch/openarm.bimanual.launch.py)）。開發入口不能直接繼承真機預設。
+
+## 設計決策／提案
+
+- 這次開發容器選 Humble／Jammy、Python 3.10，和 OpenArm 既有路徑一致；Cyclone DDS 為本次開發選擇。三機統一發行版是後續驗收項目，尚未宣稱 TidyBot Humble 與 Thor GPU 全通。
+- 先一個整合 repo，外部程式以 SHA 清單取得，模型核心保留原相依；整合只寫 ROS adapters、launch 和互鎖。
+- OpenArm NUC 放任務管理與 MoveIt，TidyBot NUC 放導航／唯一速度出口，Thor 放推論與重建。GPU worker 與 ROS adapter 可分容器，以有界本機 IPC 連接。
+- 本輪只提供 `ros-smoke`、`dev`、`dev-check`，不提供會被誤認成可部署的空殼 `sim`／`thor`／真機 service。下一輪 P1 才完成 fake hardware 功能閉環。
+
+## 待驗證清單
+
+1. 兩台 NUC 的 OS／架構／現有 checkout；Thor 的 JetPack、Jetson Linux、CUDA、Python、PyTorch、GPU runtime 與 extension 支援。依 [NVIDIA 官方容器說明](https://docs.nvidia.com/jetson/agx-thor-devkit/user-guide/latest/setup_cuda.html) 選匹配的映像，不能直接複用 x86 CPU 開發映像。
+2. 四個相機型號、連接主機、影像 topic／QoS／頻率／擷取時間、內參、胸口／肩膀外參、左腕手眼標定。`pure_rgb` 保留；RGB-D 是獨立擴充。
+3. OpenArm 五個套件的乾淨建置、fake hardware action 名稱、取消／停止／回饋、雙臂碰撞及相機裝配模型。
+4. TidyBot Humble 的 Phoenix／ruckig 安裝、全向 Nav2 適配、導航／停靠／手把仲裁與本機許可；原 gamepad lease 不得當正式任務依賴。
+5. MASt3R 尺度與相機座標轉換、追蹤品質、胸口／腕部配準、同步即時動態障礙的可信 3D。背景深度不得當手深度。
+6. 模型／prompt／checkpoint hash、三視角狀態分離、錄包測資與離線準確率；新 `NO_DETECT` 契約需明確定義來源，不能強改 checkpoint schema。
+7. 三機 DDS discovery、時鐘同步、TF 唯一來源、QoS、影像頻寬、壓力負載與逾時；本輪 localhost smoke 不涵蓋跨機。
+8. 既有設計書中提及的計畫書頁碼、純 RGB 驗收條文及 2026-11-30 交期未附原始計畫書，本次沒有查證，不能作為已確認的需求證據。
+
+## 實際驗收
+
+完整指令與輸出見 [開發環境驗收紀錄](validation/2026-11-10-dev.md)。未執行項目按上列清單保留，不以靜態讀碼替代功能測試。
