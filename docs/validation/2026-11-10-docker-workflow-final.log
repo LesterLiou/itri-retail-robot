@@ -1,0 +1,5 @@
+DISPLAY=:99
+ROS_DISTRO=humble
+RETAIL_BAKED_ONLY=0
+/workspace/ros2_ws/install/retail_core
+PASS restart: IDLE, measured stow/standstill, disabled, no goal replay

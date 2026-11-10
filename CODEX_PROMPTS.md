@@ -1,8 +1,14 @@
 # Codex 開發提示詞
 
-把 `AGENTS.md` 放在整合 repo 根目錄，把設計書與 VQA 提示詞放到相應子目錄。保留根目錄的 `Dockerfile`、`compose.yaml` 與 `.dockerignore`。每次給 Codex 一張任務卡即可。先執行 P0，依已驗證的基線調整其餘任務卡，再分開實作。Docker 交付與驗收見 [docs/DOCKER.md](docs/DOCKER.md)。
+把 `AGENTS.md` 放在整合 repo 根目錄，把設計書與 VQA 提示詞放到相應子目錄。Docker 定義集中於 `docker/`；根目錄保留 include 入口 `compose.yaml`、`Makefile` 與 `.dockerignore`。overlay 操作以 README／Makefile 的 `--project-directory . -f docker/compose.yaml` 鏈為準。每次給 Codex 一張任務卡即可。先執行 P0，依已驗證的基線調整其餘任務卡，再分開實作。Docker 交付與驗收見 [docs/DOCKER.md](docs/DOCKER.md)。
 
-## 本資料夾目前的下一張任務卡
+## 目前整合狀態與下一步
+
+已實作 Docker ROS 整合 graph、真實 VQA／MediaPipe adapters、Nav2／MoveIt fake 任務、本地閘門與 RViz；先讀 README 及 `docs/validation/2026-11-10-integration.md` 再開工。以下 P0／P1a 卡保留為歷史階段範本，不能重新假定目前沒有程式。
+
+下一張任務先選一個可驗收範圍：實體 RealSense 只讀擷取與標定；ArUco 假場景 lease 交接；或取得固定 SHA／模型的 MASt3R runtime 後驗證尺度與配準。保留已通過的 CPU 完整任務和故障測試；不得為讓實體資料通過而改 fixture 標籤、放寬時效、跳過場景有效性或沿用假的 TF／收納姿態。需要模型 runtime 或標定時列明輸入資產，無資產就維持 invalid。
+
+## 歷史 P1a 任務卡
 
 已建立 P0 CPU 開發容器及 `docs/BASELINE.md`。既有 P0 卡保留為重新盤點範本；現在先使用下列 P1a，不要把未連線的 NUC／Thor 資訊當成已確認。
 

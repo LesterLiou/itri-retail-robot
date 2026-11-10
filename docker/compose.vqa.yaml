@@ -1,0 +1,8 @@
+# Real model observations with the existing isolated fake robot and desktop.
+services:
+  sim:
+    environment:
+      VQA_BACKEND: http
+      HAND_BACKEND: mediapipe
+      CAMERA_SOURCE: ${CAMERA_SOURCE:-external}
+      VIDEO_PATH: ${VIDEO_PATH:-}

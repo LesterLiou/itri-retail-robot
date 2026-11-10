@@ -1,5 +1,11 @@
 # 來源與套件取得
 
+## 本輪已實作的取得／建置入口
+
+建議用 `docker compose run --rm dev python3 /workspace/scripts/fetch_sources.py`，會 shallow／partial fetch 固定 SHA，OpenArm 只取五個套件；已有 checkout 只檢查版本與乾淨狀態，不自動改寫。`docker compose build sim` 已在映像內建置 OpenArm、TidyBot 與整合套件；實測見 [integration 驗收](validation/2026-11-10-integration.md)。下方手動 vcs import 與 symlink 保留作開發參考，不是 sim 映像的部署依賴。
+
+本輪仍使用 `.repos`，沒有新增 `.gitmodules`。自己的整合程式留在一個 repo；模型、資料與上游研究環境不拆成每個 node 一個 repo。
+
 ## 取得策略
 
 外部 repo 使用根目錄 `dependencies.repos` 鎖定完整 SHA，不追隨浮動分支；VQA 指向 `LesterVQA` 的提交。這份清單是來源盤點，**不代表四個 repo 已經能一起編譯或執行**。上游有巢狀工作區、不同世代模型及重複機器人套件，不能全部直接塞進同一個 colcon 工作區。
@@ -9,13 +15,14 @@
 ```bash
 cd /workspace
 mkdir -p external
-vcs validate < dependencies.repos
 vcs import external < dependencies.repos
 vcs status external
 vcs export --exact external > /tmp/itri-sources.repos
 ```
 
 首次 import 可能取得較大的 Git 歷史與 mesh；OpenArm 當前 tree 約 520 MB，含 Isaac 與 RealSense 資產。不要自動更新已存在且有修改的 checkout。VQA 的 SAM3 submodule 先不遞迴下載，選定研究路徑需要時才依鎖定 gitlink 初始化。權重與 rosbag 不在這份清單中。
+
+本次發現 apt 提供的 vcstool 0.3.0 在 `vcs validate` 驗證完整 SHA 時會觸發 `UnboundLocalError`；因此不要把該指令當作這份 SHA 清單的驗收。清單的 YAML／SHA 格式在容器內檢查，遠端 SHA 已透過 GitHub API 查證；取得來源後以 `vcs export --exact`／`git rev-parse HEAD` 對照鎖定清單。本次不修改或替換 vcstool 上游程式。
 
 ## 四個必要來源與選用範圍
 

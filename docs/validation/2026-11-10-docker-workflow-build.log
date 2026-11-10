@@ -1,0 +1,362 @@
+=== retail_interfaces: container colcon stdout_stderr.log ===
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found Python3: /opt/perception/bin/python3 (found version "3.10.12") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rosidl_default_generators: 1.2.1 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Found rosidl_adapter: 3.1.9 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found std_msgs: 4.9.2 (/opt/ros/humble/share/std_msgs/cmake)
+-- Found ament_cmake_ros: 0.10.1 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /opt/perception/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+-- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /opt/perception/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+-- Found PythonExtra: .so  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /workspace/ros2_ws/build/retail_interfaces
+[  1%] Generating C code for ROS interfaces
+[  3%] Generating C++ code for ROS interfaces
+[  5%] Generating Rust code for ROS interfaces
+[  5%] Built target ament_cmake_python_symlink_retail_interfaces
+running egg_info
+creating retail_interfaces.egg-info
+writing retail_interfaces.egg-info/PKG-INFO
+writing dependency_links to retail_interfaces.egg-info/dependency_links.txt
+writing top-level names to retail_interfaces.egg-info/top_level.txt
+writing manifest file 'retail_interfaces.egg-info/SOURCES.txt'
+reading manifest file 'retail_interfaces.egg-info/SOURCES.txt'
+writing manifest file 'retail_interfaces.egg-info/SOURCES.txt'
+[  5%] Built target ament_cmake_python_build_retail_interfaces_egg
+[  5%] Built target retail_interfaces__rs
+[  5%] Built target retail_interfaces__cpp
+[  7%] Generating C++ type support for eProsima Fast-RTPS
+[ 10%] Generating C++ introspection for ROS interfaces
+[ 10%] Generating C++ type support dispatch for ROS interfaces
+[ 12%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_c.dir/rosidl_generator_c/retail_interfaces/msg/detail/risk_advisory__functions.c.o
+[ 14%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_c.dir/rosidl_generator_c/retail_interfaces/msg/detail/scene_state__functions.c.o
+[ 16%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_c.dir/rosidl_generator_c/retail_interfaces/msg/detail/obstacle_state__functions.c.o
+[ 17%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_c.dir/rosidl_generator_c/retail_interfaces/msg/detail/gate_state__functions.c.o
+[ 19%] Linking C shared library libretail_interfaces__rosidl_generator_c.so
+[ 19%] Built target retail_interfaces__rosidl_generator_c
+[ 21%] Generating C type support dispatch for ROS interfaces
+[ 23%] Generating C introspection for ROS interfaces
+[ 25%] Generating C type support for eProsima Fast-RTPS
+[ 28%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/retail_interfaces/msg/scene_state__type_support.cpp.o
+[ 28%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/retail_interfaces/msg/risk_advisory__type_support.cpp.o
+[ 30%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/retail_interfaces/msg/gate_state__type_support.cpp.o
+[ 32%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/retail_interfaces/msg/obstacle_state__type_support.cpp.o
+[ 33%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/retail_interfaces/msg/detail/dds_fastrtps/gate_state__type_support.cpp.o
+[ 35%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/retail_interfaces/msg/detail/dds_fastrtps/obstacle_state__type_support.cpp.o
+[ 39%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/retail_interfaces/msg/detail/dds_fastrtps/risk_advisory__type_support.cpp.o
+[ 39%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/retail_interfaces/msg/detail/dds_fastrtps/scene_state__type_support.cpp.o
+[ 42%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/retail_interfaces/msg/detail/scene_state__type_support.cpp.o
+[ 42%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/retail_interfaces/msg/detail/obstacle_state__type_support.cpp.o
+[ 46%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/retail_interfaces/msg/detail/risk_advisory__type_support.cpp.o
+[ 46%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/retail_interfaces/msg/detail/gate_state__type_support.cpp.o
+[ 51%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/retail_interfaces/msg/detail/risk_advisory__type_support.c.o
+[ 51%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/retail_interfaces/msg/detail/risk_advisory__type_support_c.cpp.o
+[ 51%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/retail_interfaces/msg/detail/gate_state__type_support_c.cpp.o
+[ 53%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/retail_interfaces/msg/detail/scene_state__type_support_c.cpp.o
+[ 55%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/retail_interfaces/msg/detail/scene_state__type_support.c.o
+[ 57%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/retail_interfaces/msg/detail/gate_state__type_support.c.o
+[ 58%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/retail_interfaces/msg/detail/obstacle_state__type_support.c.o
+[ 60%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/retail_interfaces/msg/detail/obstacle_state__type_support_c.cpp.o
+[ 66%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/retail_interfaces/msg/obstacle_state__type_support.cpp.o
+[ 66%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/retail_interfaces/msg/scene_state__type_support.cpp.o
+[ 66%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/retail_interfaces/msg/gate_state__type_support.cpp.o
+[ 67%] Building CXX object CMakeFiles/retail_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/retail_interfaces/msg/risk_advisory__type_support.cpp.o
+[ 69%] Linking C shared library libretail_interfaces__rosidl_typesupport_introspection_c.so
+[ 71%] Linking CXX shared library libretail_interfaces__rosidl_typesupport_cpp.so
+[ 73%] Linking CXX shared library libretail_interfaces__rosidl_typesupport_c.so
+[ 73%] Built target retail_interfaces__rosidl_typesupport_introspection_c
+[ 73%] Built target retail_interfaces__rosidl_typesupport_cpp
+[ 73%] Built target retail_interfaces__rosidl_typesupport_c
+[ 75%] Linking CXX shared library libretail_interfaces__rosidl_typesupport_introspection_cpp.so
+[ 76%] Linking CXX shared library libretail_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[ 76%] Built target retail_interfaces__rosidl_typesupport_introspection_cpp
+[ 76%] Built target retail_interfaces__rosidl_typesupport_fastrtps_cpp
+[ 78%] Linking CXX shared library libretail_interfaces__rosidl_typesupport_fastrtps_c.so
+[ 78%] Built target retail_interfaces__rosidl_typesupport_fastrtps_c
+[ 78%] Built target retail_interfaces
+[ 80%] Generating Python code for ROS interfaces
+[ 80%] Built target retail_interfaces__py
+[ 85%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_py.dir/rosidl_generator_py/retail_interfaces/msg/_risk_advisory_s.c.o
+[ 85%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_py.dir/rosidl_generator_py/retail_interfaces/msg/_obstacle_state_s.c.o
+[ 85%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_py.dir/rosidl_generator_py/retail_interfaces/msg/_scene_state_s.c.o
+[ 87%] Building C object CMakeFiles/retail_interfaces__rosidl_generator_py.dir/rosidl_generator_py/retail_interfaces/msg/_gate_state_s.c.o
+[ 89%] Linking C shared library rosidl_generator_py/retail_interfaces/libretail_interfaces__rosidl_generator_py.so
+[ 89%] Built target retail_interfaces__rosidl_generator_py
+[ 91%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o
+[ 92%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_c.c.o
+[ 94%] Building C object CMakeFiles/retail_interfaces__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o
+[ 96%] Linking C shared library rosidl_generator_py/retail_interfaces/retail_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[ 98%] Linking C shared library rosidl_generator_py/retail_interfaces/retail_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[100%] Linking C shared library rosidl_generator_py/retail_interfaces/retail_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[100%] Built target retail_interfaces__rosidl_typesupport_c__pyext
+[100%] Built target retail_interfaces__rosidl_typesupport_introspection_c__pyext
+[100%] Built target retail_interfaces__rosidl_typesupport_fastrtps_c__pyext
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/ament_index/resource_index/rosidl_interfaces/retail_interfaces
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__functions.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__struct.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__type_support.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__functions.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__struct.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__type_support.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__functions.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__struct.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__type_support.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__functions.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__struct.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__type_support.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/gate_state.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/obstacle_state.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/risk_advisory.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/rosidl_generator_c__visibility_control.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/scene_state.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/library_path.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/library_path.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__rosidl_typesupport_fastrtps_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__rosidl_typesupport_introspection_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__rosidl_typesupport_introspection_c.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__builder.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__struct.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__traits.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__type_support.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__builder.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__struct.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__traits.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__type_support.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__builder.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__struct.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__traits.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__type_support.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__builder.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__struct.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__traits.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__type_support.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/gate_state.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/obstacle_state.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/risk_advisory.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/scene_state.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__rosidl_typesupport_fastrtps_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/gate_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/obstacle_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/risk_advisory__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/include/retail_interfaces/retail_interfaces/msg/detail/scene_state__rosidl_typesupport_introspection_cpp.hpp
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/pythonpath.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/pythonpath.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces-0.1.0-py3.10.egg-info/PKG-INFO
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces-0.1.0-py3.10.egg-info/SOURCES.txt
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces-0.1.0-py3.10.egg-info/dependency_links.txt
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces-0.1.0-py3.10.egg-info/top_level.txt
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/__init__.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_c.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/_retail_interfaces_s.ep.rosidl_typesupport_introspection_c.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/libretail_interfaces__rosidl_generator_py.so
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/__init__.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_gate_state.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_gate_state_s.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_obstacle_state.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_obstacle_state_s.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_risk_advisory.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_risk_advisory_s.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_scene_state.py
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_scene_state_s.c
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Up-to-date symlink: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Up-to-date symlink: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Up-to-date symlink: /workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/retail_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/rust/Cargo.toml
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/rust/build.rs
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/rust/src/lib.rs
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/rust/src/msg.rs
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/rust/src/msg/rmw.rs
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/RiskAdvisory.idl
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/GateState.idl
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/SceneState.idl
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/ObstacleState.idl
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/RiskAdvisory.msg
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/GateState.msg
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/SceneState.msg
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/msg/ObstacleState.msg
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/ament_index/resource_index/package_run_dependencies/retail_interfaces
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/ament_index/resource_index/parent_prefix_path/retail_interfaces
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/ament_prefix_path.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/ament_prefix_path.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/path.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/environment/path.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/local_setup.bash
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/local_setup.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/local_setup.zsh
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/local_setup.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/package.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/ament_index/resource_index/packages/retail_interfaces
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/rosidl_cmake-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/ament_cmake_export_targets-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/rosidl_cmake_aggregate_target-extras.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfacesConfig.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfacesConfig-version.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/package.xml
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_generator_c.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_generator_c.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_fastrtps_c.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_fastrtps_c.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_introspection_c.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_c.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_c.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_fastrtps_cpp.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_introspection_cpp.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_cpp.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_typesupport_cpp.so" to ""
+Listing '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/__init__.py'...
+Listing '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/__init__.py'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_gate_state.py'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_obstacle_state.py'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_risk_advisory.py'...
+Compiling '/workspace/ros2_ws/install/retail_interfaces/lib/python3.10/site-packages/retail_interfaces/msg/_scene_state.py'...
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_generator_py.so
+-- Set runtime path of "/workspace/ros2_ws/install/retail_interfaces/lib/libretail_interfaces__rosidl_generator_py.so" to ""
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_generator_cExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_generator_cExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_typesupport_fastrtps_cExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_cExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_cExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_generator_cppExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_typesupport_fastrtps_cppExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_cppExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/retail_interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_generator_pyExport.cmake
+-- Installing: /workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces/cmake/export_retail_interfaces__rosidl_generator_pyExport-noconfig.cmake
+=== retail_core: container colcon stdout_stderr.log ===
+running develop
+running egg_info
+creating retail_core.egg-info
+writing retail_core.egg-info/PKG-INFO
+writing dependency_links to retail_core.egg-info/dependency_links.txt
+writing entry points to retail_core.egg-info/entry_points.txt
+writing requirements to retail_core.egg-info/requires.txt
+writing top-level names to retail_core.egg-info/top_level.txt
+writing manifest file 'retail_core.egg-info/SOURCES.txt'
+reading manifest file 'retail_core.egg-info/SOURCES.txt'
+writing manifest file 'retail_core.egg-info/SOURCES.txt'
+running build_ext
+Creating /workspace/ros2_ws/install/retail_core/lib/python3.10/site-packages/retail-core.egg-link (link to .)
+Installing arm_gate script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing base_gate script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing camera_source script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing demo_control script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing fake_base script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing hand_adapter script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing mission_manager script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing reconstruction_adapter script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing scene_manager script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing view_planner script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+Installing vqa_adapter script to /workspace/ros2_ws/install/retail_core/lib/retail_core
+
+Installed /workspace/ros2_ws/build/retail_core
+running symlink_data
+creating /workspace/ros2_ws/install/retail_core/share/ament_index
+creating /workspace/ros2_ws/install/retail_core/share/ament_index/resource_index
+creating /workspace/ros2_ws/install/retail_core/share/ament_index/resource_index/packages
+symbolically linking /workspace/ros2_ws/build/retail_core/resource/retail_core -> /workspace/ros2_ws/install/retail_core/share/ament_index/resource_index/packages
+symbolically linking /workspace/ros2_ws/build/retail_core/package.xml -> /workspace/ros2_ws/install/retail_core/share/retail_core
+=== retail_bringup: container colcon stdout_stderr.log ===
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found Python3: /opt/perception/bin/python3 (found version "3.10.12") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /workspace/ros2_ws/build/retail_bringup
+-- Install configuration: ""
+-- Execute custom install script
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/launch/docking.launch.py
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/launch/perception.launch.py
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/launch/realsense.launch.py
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/launch/sim.launch.py
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/cameras.example.yaml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/controllers.yaml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/docking.example.yaml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/nav2.yaml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/navigate.xml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/config/navigate_through.xml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/maps/shop.pgm
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/maps/shop.yaml
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/rviz/retail.rviz
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/ament_index/resource_index/package_run_dependencies/retail_bringup
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/ament_index/resource_index/parent_prefix_path/retail_bringup
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/environment/ament_prefix_path.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/environment/ament_prefix_path.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/environment/path.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/environment/path.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/local_setup.bash
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/local_setup.sh
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/local_setup.zsh
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/local_setup.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/package.dsv
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/ament_index/resource_index/packages/retail_bringup
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/cmake/retail_bringupConfig.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/cmake/retail_bringupConfig-version.cmake
+-- Symlinking: /workspace/ros2_ws/install/retail_bringup/share/retail_bringup/package.xml

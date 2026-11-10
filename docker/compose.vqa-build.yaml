@@ -1,0 +1,9 @@
+services:
+  vqa-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.vqa
+      args:
+        VQA_BASE_IMAGE: ${VQA_BASE_IMAGE:-itri-retail-robot:humble-dev}
+        USER_UID: ${LOCAL_UID:-1000}
+        USER_GID: ${LOCAL_GID:-1000}

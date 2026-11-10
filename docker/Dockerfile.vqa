@@ -1,0 +1,14 @@
+ARG VQA_BASE_IMAGE=itri-retail-robot:humble-dev
+FROM ${VQA_BASE_IMAGE}
+ARG USER_UID=1000
+ARG USER_GID=1000
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends python3-venv && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv --system-site-packages /opt/vqa \
+    && /opt/vqa/bin/pip install --no-cache-dir torch==2.10.0 torchvision==0.25.0 --index-url https://download.pytorch.org/whl/cu128 \
+    && /opt/vqa/bin/pip install --no-cache-dir numpy==1.26.4 transformers==5.15.0
+RUN /opt/vqa/bin/pip install --no-cache-dir opencv-python-headless==4.11.0.86 pyyaml==6.0.3
+ENV PATH=/opt/vqa/bin:$PATH
+ENV XDG_CACHE_HOME=/tmp/retail-cache TORCH_HOME=/tmp/retail-torch
+USER ${USER_UID}:${USER_GID}
+ENTRYPOINT ["python3", "/app/vqa_worker.py"]

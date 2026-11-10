@@ -1,5 +1,19 @@
 # 整合開發基線
 
+## 2026-11-10 相機與目錄更新
+
+已透過 Docker daemon 實際找到 D435，啟動 RGB 640×480／15 FPS，並接上 VLMotion 的真實 checkpoint 與訓練相容 constrained VQA。代理環境的 /dev 與 sysfs 不能代表 Docker 主機的設備可見性，因此以 camera-probe／SDK 和實際 ROS 影像為準；序號存本機 config/local。Docker 定義移入 docker/，根 Compose 保留 include 入口。結果與版本見 [RealSense/VQA 驗收](validation/2026-11-10-realsense-vqa.md)。下面「未列出相機」保留為先前階段的觀察，不代表目前狀態。
+
+## 2026-11-10 整合階段更新
+
+Docker 使用／開發入口另完成 `DISPLAY` 修正、可寫 sim overlay 與 Makefile 操作。整合套件在同一 sim 映像內編譯及驗收；獨立 dev 工具鏈不自動載入 sim overlay。指令與本輪證據見 [Docker 工作流程驗收](validation/2026-11-10-docker-workflow.md)。
+
+以下 P0 內容保留為歷史查證。本輪起始整合 Git 已存在，HEAD 為 `d01fae544ae0961335484d71a8d47d9f3b5a8a54`，origin 為 LesterLiou/itri-retail-robot；起始已有 README／BASELINE／DEPENDENCIES／P0 驗收紀錄修改及未追蹤輸出，均保留其內容。未 commit／push，未修改四個上游。
+
+已依 `dependencies.repos` 取得四個固定 SHA；OpenArm sparse checkout，總來源約 196 MB。Docker 內已建置上游五個 OpenArm 套件、TidyBot 套件和三個整合套件。已完成真實 Nav2／MoveIt 的假硬體任務、取消與故障測試，及真實 VQA／MediaPipe 的影片 ROS 接口驗收。具體映像、指令與輸出見 [integration 驗收紀錄](validation/2026-11-10-integration.md)。
+
+本機查到 RTX 5070（12 GB）、驅動 580.178.04。VQA 原始碼在 `/home/lester/VLMotion`，HEAD 與鎖定 SHA 相同且乾淨；checkpoint 為 `robot_vqa_recovery_v1/c_policy/best`，僅以本機 `.env` 唯讀掛載。這些路徑是本次測試資產位置，不是正式部署依賴。主機未列出 `/dev/video*`；沒有進行實體 RealSense 擷取。未找到 MASt3R 已安裝 runtime／checkpoint；未執行其自動下載／patch 腳本。
+
 查證日期：2026-11-10（Asia/Taipei）。本次範圍是 **P0 CPU Docker 開發環境及來源接點查證**；下列「程式已確認」不等於硬體／模型 runtime 已驗收。原設計書是既有資料，不能以其快照取代本次查證。
 
 ## 已查證事實：本機
@@ -15,6 +29,7 @@
 | 權限 | 沙箱直接存取 daemon 回報 permission denied；經工具執行權限核准後可用。未改 socket 權限／群組，未停用其他容器 |
 | ROS 基底 | 官方 `ros:humble-ros-base-jammy` 已拉取並以 manifest digest `sha256:d9bcf2e6f72df127fdee07048c2e87b1b4b9a59a74af0592f4489fc2844aa855` 鎖在 Dockerfile |
 | Python／RMW | 開發設計選 Humble 的系統 Python 3.10、`rmw_cyclonedds_cpp`；實際套件版本由容器驗收輸出記錄 |
+| vcstool | apt 的 0.3.0 對完整 SHA 執行 `vcs validate` 觸發內部 `UnboundLocalError`；容器可連 GitHub，這不是網路問題。改用 YAML／SHA 格式檢查及取得後的 exact HEAD 對照，未修改工具上游 |
 | 其他電腦 | 未連線 OpenArm NUC、TidyBot NUC 或 Thor；不能把本機規格視為三機規格 |
 
 ## 已查證事實：上游來源

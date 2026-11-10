@@ -1,0 +1,15 @@
+detector:
+  image_topic: /cameras/chest/color/image_raw
+  camera_info_topic: /cameras/chest/color/camera_info
+  base_frame: base_link
+  camera_frame: chest_link
+  optical_frame: chest_color_optical_frame
+  publish_camera_tf: false
+  camera_mount_calibrated: false
+  dictionary: DICT_4X4_50
+  marker_id: 0
+  marker_size: 0.12
+controller:
+  base_frame: base_link
+  target_file: /config/dock_target.yaml
+  teach_on_start: false

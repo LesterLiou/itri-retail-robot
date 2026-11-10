@@ -1,0 +1,7 @@
+# Multiple cameras require measured, unique serial numbers.
+cameras:
+  chest: {enabled: true, serial_no: ""}
+  left_shoulder: {enabled: false, serial_no: ""}
+  right_shoulder: {enabled: false, serial_no: ""}
+  left_wrist: {enabled: false, serial_no: ""}
+

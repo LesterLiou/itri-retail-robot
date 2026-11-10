@@ -11,9 +11,15 @@ ros2_ws/src/openarm_bimanual_moveit_config
 __pycache__/
 .pytest_cache/
 *.pyc
+# GUI crash dumps and editor caches are generated locally.
+core
+core.[0-9]*
+.cache/
 *.bag
 *.db3
 *.mcap
 models/
 checkpoints/
 config/calibration/local/
+config/local/
+data/

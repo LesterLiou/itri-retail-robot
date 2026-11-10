@@ -1,0 +1,22 @@
+# Optional: select a prevalidated MASt3R CUDA environment and read-only assets.
+# No default image/version is invented for an unverified Thor runtime.
+services:
+  mast3r-worker:
+    image: ${MAST3R_WORKER_IMAGE:?Set a validated MASt3R worker image}
+    profiles: [reconstruction]
+    init: true
+    gpus: all
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    entrypoint: ["python3", "/app/mast3r_worker.py"]
+    environment:
+      PYTHONPATH: /upstream/safety
+      MAST3R_SOURCE_DIR: /runtime/MASt3R-SLAM
+      MAST3R_PYTHON: /runtime/venv/bin/python
+      MAST3R_CHECKPOINT: /models/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric.pth
+      MAST3R_RETRIEVAL_CHECKPOINT: /models/MASt3R_ViTLarge_BaseDecoder_512_catmlpdpt_metric_retrieval_trainingfree.pth
+    volumes:
+      - ./docker/mast3r_worker.py:/app/mast3r_worker.py:ro
+      - ./external/social-safety-decision:/upstream/safety:ro
+      - ${MAST3R_RUNTIME_DIR:?Set a validated runtime directory}:/runtime:ro
+      - ${MAST3R_MODEL_DIR:?Set a model directory}:/models:ro

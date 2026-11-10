@@ -1,0 +1,40 @@
+bash: cannot set terminal process group (-1): Inappropriate ioctl for device
+bash: no job control in this shell
+DISPLAY=:99
+ROS_DISTRO=humble
+RETAIL_BAKED_ONLY=0
+retail_interfaces=/workspace/ros2_ws/install/retail_interfaces/share/retail_interfaces
+retail_core=/workspace/ros2_ws/install/retail_core/share/retail_core
+retail_bringup=/workspace/ros2_ws/install/retail_bringup/share/retail_bringup
+PASS: exec shell X server connection
+PASS: rviz2 launched from docker exec and created an X window
+PASS: noVNC HTTP 200
+RViz stderr (existing upstream inertia/shader warnings may appear):
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-developer'
+[INFO] [1794313494.011994883] [rviz2]: Stereo is NOT SUPPORTED
+[INFO] [1794313494.012067538] [rviz2]: OpenGl version: 4.5 (GLSL 4.5)
+[INFO] [1794313494.041301967] [rviz2]: Stereo is NOT SUPPORTED
+[INFO] [1794313494.163343598] [rviz2]: Stereo is NOT SUPPORTED
+[ERROR] [1794313494.506670286] [rviz2]: The link openarm_left_left_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.352091415] [rviz2]: The link openarm_left_right_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.352205584] [rviz2]: The link openarm_right_left_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.352580969] [rviz2]: The link openarm_right_right_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[INFO] [1794313495.780579275] [rviz2]: Trying to create a map of size 120 x 80 using 1 swatches
+[ERROR] [1794313495.787335848] [rviz2]: The link openarm_left_left_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.788389498] [rviz2]: The link openarm_left_right_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.788536157] [rviz2]: The link openarm_right_left_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.789350846] [rviz2]: The link openarm_right_right_finger is has unrealistic inertia, so the equivalent inertia box will not be shown.
+
+[ERROR] [1794313495.952610303] [rviz2]: Vertex Program:rviz/glsl120/indexed_8bit_image.vert Fragment Program:rviz/glsl120/indexed_8bit_image.frag GLSL link result : 
+active samplers with a different type refer to the same texture image unit
+[INFO] [1794313501.933819666] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+terminate called after throwing an instance of 'std::system_error'
+  what():  Invalid argument
+

@@ -1,0 +1,7 @@
+Python 3.10.12
+uid=1001(developer) gid=1001(developer) groups=1001(developer)
+humble
+rmw_cyclonedds_cpp
+82
+1
+PASS: four pinned source entries and YAML syntax

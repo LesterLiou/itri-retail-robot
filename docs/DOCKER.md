@@ -1,6 +1,25 @@
 # Docker 開發與驗收
 
+## Docker 整合系統入口
+
+目前新增 `sim` 與 `vqa-worker`，操作以 [README](../README.md) 為準。`sim` 在映像內編譯所有選定 ROS 套件，提供 Nav2／OpenArm fake hardware、RViz2／noVNC、感知 adapters 和本地閘門；只綁 localhost:6080，不映射實體設備。`vqa-worker` 為選用 GPU 容器，唯讀掛載模型，由 ROS adapter 交付結果。CPU 模式與真實推論結果分開標記。
+
+`docker/compose.realsense.yaml` 是明確選擇的相機硬體入口；`docker/compose.mast3r.yaml` 要求提供驗證過的 GPU runtime／模型，不提供猜測的 Thor 映像。兩者均不啟動馬達。實際驗收、映像與未執行項目見 [integration 紀錄](validation/2026-11-10-integration.md)。下面 P0 說明保留其測試範圍，不代表現在仍只有三個 service。
+
 Docker Compose 是開發、模擬與三機部署的共同入口。目前提供 ROS 2 Humble smoke 映像、可編譯的 CPU 開發映像與開發工具鏈驗收。底盤、手臂及 Thor 工作負載的正式映像在查明套件與硬體版本後，依下列要求實作。本輪實測見 [驗收紀錄](validation/2026-11-10-dev.md)。
+
+日常使用 `make up`／`make shell`；整合開發使用 `make dev`、`make dev-build`、`make dev-restart`。開發模式以 `docker/compose.dev.yaml` 將同一 sim 工作區設為可寫，使用容器內編譯的 overlay。完整目錄與操作見 [專案配置](PROJECT_LAYOUT.md)。Compose 已配置所有 exec shell 的 `DISPLAY=:99`，RViz 經 localhost:6080 的瀏覽器桌面操作；修正紀錄見 [Docker 工作流程驗收](validation/2026-11-10-docker-workflow.md)。
+
+## 目前的 Docker 目錄與相機入口
+
+正式定義已集中於 `docker/`，根 `compose.yaml` 為 include 入口，所有 build context 維持專案根目錄。直接 `docker compose exec sim bash` 可用；疊加配置請用 Makefile，或 `docker compose --project-directory . -f docker/compose.yaml -f docker/compose.<mode>.yaml`。
+
+- `make vqa`：等待 GPU worker 健康後，啟動外部 RGB 模式的 sim，再啟動 RealSense driver。
+- `make vqa-dev`：同一管線使用可寫 overlay 並進入 shell；重新執行會協調重建 sim／相機 namespace。
+- `make camera-list`：一次性探測，只授權相機裝置。
+- `make up`／`make dev`：停止相機，切回 fixture 使用／開發。
+
+D435 實體 RGB 與模型已完成本機驗收，見 [相機與 VQA 實測](validation/2026-11-10-realsense-vqa.md)。RealSense ROS 套件已在 dev／sim 映像安裝。GPU worker 的本機原始碼與 checkpoint 透過 `.env` 指向 VLMotion 唯讀掛載；依賴和映像關係見 README。以下工具鏈段落保留 P0 的驗收流程，路徑以現行 `docker/Dockerfile` 為準。
 
 ## 進入開發環境
 
@@ -27,7 +46,7 @@ docker compose exec dev bash
 docker compose stop dev
 ```
 
-互動 shell 與 entrypoint 會載入 `/opt/ros/humble/setup.bash`，有工作區 overlay 時再載入它。用 `docker compose exec dev bash -c '...'` 執行非互動指令時，需明確 `source /opt/itri/setup.bash`。
+互動 shell 與 entrypoint 會載入 `/opt/ros/humble/setup.bash`。獨立 `dev`／`dev-check` 不自動載入整合 overlay，因為它們沒有 sim 映像的上游 underlay；整合套件開發使用 `make dev`。用 `docker compose exec dev bash -c '...'` 執行非互動指令時，需明確 `source /opt/itri/setup.bash`。
 
 | Service | 用途／映像 | 網路與掛載 |
 |---|---|---|
@@ -37,7 +56,7 @@ docker compose stop dev
 
 直接指定 service 會啟用對應 profile，無須額外 `--profile`；單純 `docker compose up` 只執行預設 smoke。[Compose profiles](https://docs.docker.com/compose/how-tos/profiles/)
 
-三個 service 都沒有設備映射、host network、GPU、privileged 或 Docker socket，並移除 capabilities。開發容器的 localhost ROS graph 只用於單容器程序；跨容器模擬與三機 discovery 應另建配置。套件已包含 RViz，但沒有配置 X11／Wayland；無視窗開發可立即使用，視窗化驗證另加明確的 GUI profile。
+三個 service 都沒有設備映射、host network、GPU、privileged 或 Docker socket，並移除 capabilities。開發容器的 localhost ROS graph 只用於單容器程序；跨容器模擬與三機 discovery 應另建配置。獨立工具鏈沒有啟動桌面；整合 sim 已提供 Xvfb／noVNC，使用 make dev 或 make vqa-dev 開發與觀看 RViz。
 
 ## 映像與來源版本
 

@@ -1,0 +1,10 @@
+# Editable integration workspace using the same isolated fake robot and desktop.
+# Usage: docker compose --project-directory . -f docker/compose.yaml -f docker/compose.dev.yaml up -d sim
+services:
+  sim:
+    environment:
+      RETAIL_BAKED_ONLY: "0"
+    working_dir: /workspace/ros2_ws
+    volumes:
+      # Replaces only the /workspace mount; preserves the video mount.
+      - .:/workspace:rw

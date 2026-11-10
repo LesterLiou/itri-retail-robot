@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<package format="3"><name>retail_bringup</name><version>0.1.0</version>
+<description>Isolated retail robot launches and role configuration</description><maintainer email="dev@example.invalid">ITRI</maintainer><license>Apache-2.0</license>
+<buildtool_depend>ament_cmake</buildtool_depend><exec_depend>retail_core</exec_depend><exec_depend>launch_ros</exec_depend>
+<exec_depend>nav2_bringup</exec_depend><exec_depend>openarm_description</exec_depend><exec_depend>openarm_bimanual_moveit_config</exec_depend><exec_depend>moveit_configs_utils</exec_depend><exec_depend>realsense2_camera</exec_depend>
+<export><build_type>ament_cmake</build_type></export></package>
+

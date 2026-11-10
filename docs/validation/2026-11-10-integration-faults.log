@@ -1,0 +1,3 @@
+PASS unauthorized arm goal rejected
+PASS STOP latched; clear/CONTINUE does not resume
+PASS duplicate base writer causes latched HOLD

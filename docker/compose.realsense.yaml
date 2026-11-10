@@ -1,0 +1,36 @@
+# Camera devices only: no CAN, motors, host networking or privileged mode.
+x-camera: &camera
+  image: itri-retail-robot:humble-sim
+  profiles: [camera]
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  group_add: ["${VIDEO_GID:-44}"]
+  environment:
+    ROS_DOMAIN_ID: "83"
+    ROS_LOCALHOST_ONLY: "1"
+    RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+    CYCLONEDDS_URI: file:///opt/itri/cyclonedds-local.xml
+    RETAIL_BAKED_ONLY: "1"
+  # Set measured UVC device paths for your camera; do not mount all of /dev.
+  devices:
+    - ${RS_VIDEO0:-/dev/video0}:${RS_VIDEO0:-/dev/video0}
+    - ${RS_VIDEO1:-/dev/video1}:${RS_VIDEO1:-/dev/video1}
+    - ${RS_VIDEO2:-/dev/video2}:${RS_VIDEO2:-/dev/video2}
+    - ${RS_VIDEO3:-/dev/video3}:${RS_VIDEO3:-/dev/video3}
+    - ${RS_VIDEO4:-/dev/video4}:${RS_VIDEO4:-/dev/video4}
+    - ${RS_VIDEO5:-/dev/video5}:${RS_VIDEO5:-/dev/video5}
+  device_cgroup_rules: ["c 189:* rmw"]
+  volumes:
+    - /dev/bus/usb:/dev/bus/usb
+    - /run/udev:/run/udev:ro
+
+services:
+  cameras:
+    <<: *camera
+    network_mode: service:sim
+    command: ["ros2", "launch", "retail_bringup", "realsense.launch.py", "config:=/config/cameras.yaml"]
+  camera-probe:
+    <<: *camera
+    network_mode: none
+    command: ["rs-enumerate-devices", "-s"]

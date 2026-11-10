@@ -1,0 +1,29 @@
+ Container itri-retail-sim-1  Recreate
+ Container itri-retail-sim-1  Recreated
+ Container itri-retail-sim-1  Starting
+ Container itri-retail-sim-1  Started
+.............................................                            [100%]
+45 passed in 0.87s
+PASS MoveIt scene: shelf geometry committed and snack detached
+PASS full {"mission_id": "4b4a4c26aa854872b71038d8f23ee39b", "phase": "DONE", "reason": "simulation sequence completed; base remains disabled", "scene_revision": 2, "runtime": "simulation"} x= 2.0412879339214833
+PASS unauthorized arm goal rejected
+PASS STOP latched; clear/CONTINUE does not resume
+PASS duplicate base writer causes latched HOLD
+ Container itri-retail-sim-1  Recreate
+ Container itri-retail-sim-1  Recreated
+ Container itri-retail-sim-1  Starting
+ Container itri-retail-sim-1  Started
+PASS restart: IDLE, measured stow/standstill, disabled, no goal replay
+PASS arm cancel: measured joint hold, no queued placement, non-stowed reset rejected
+ Container itri-retail-sim-1  Recreate
+ Container itri-retail-sim-1  Recreated
+ Container itri-retail-sim-1  Starting
+ Container itri-retail-sim-1  Started
+PASS camera loss: stopped; restored stream cannot resume queued navigation
+PASS missing metric scene: placement refused before arm authorization
+ Container itri-retail-sim-1  Recreate
+ Container itri-retail-sim-1  Recreated
+ Container itri-retail-sim-1  Starting
+ Container itri-retail-sim-1  Started
+PASS restart: IDLE, measured stow/standstill, disabled, no goal replay
+PASS: isolated integration acceptance; logs in /tmp/retail-final-checks

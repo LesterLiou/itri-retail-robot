@@ -1,0 +1,7 @@
+PASS RealSense stream: {"frames": 15, "frame": "chest_color_optical_frame", "action": "CONTINUE", "valid": true, "reason": "", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "prompt_id": "d02131eab27f7639a650c3bcca26baae02ad80fd3d0f3558f8ed14e2ce070f21", "source": "external:c9da6dc5a7dd440fae9847e52c5f6348/aceb3dfc63a141dea69e89f4841bc1e9", "observation": "A person is walking in the scene.", "explanation": "The observed camera-relative motion does not indicate approach in this sampled history.", "robot_enabled": false}
+Traceback (most recent call last):
+  File "/workspace/scripts/accept_sim.py", line 157, in <module>
+    main()
+  File "/workspace/scripts/accept_sim.py", line 84, in main
+    assert node.state.get('phase')=='IDLE' and not node.gate.enabled and node.stopped()
+AssertionError

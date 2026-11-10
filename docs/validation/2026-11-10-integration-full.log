@@ -1,0 +1,2 @@
+PASS MoveIt scene: shelf geometry committed and snack detached
+PASS full {"mission_id": "4b4a4c26aa854872b71038d8f23ee39b", "phase": "DONE", "reason": "simulation sequence completed; base remains disabled", "scene_revision": 2, "runtime": "simulation"} x= 2.0412879339214833

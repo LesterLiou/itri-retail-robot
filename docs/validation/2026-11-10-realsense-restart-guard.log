@@ -1,0 +1,2 @@
+Camera is active; use make vqa-dev to restart camera and sim together
+make: *** [Makefile:48: dev-restart] Error 1

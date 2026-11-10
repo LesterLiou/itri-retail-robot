@@ -1,0 +1,19 @@
+docker compose --project-directory . -f docker/compose.yaml -f docker/compose.vqa.yaml -f docker/compose.realsense.yaml --profile sim --profile camera stop cameras
+docker compose --project-directory . -f docker/compose.yaml up -d --wait --wait-timeout 120 vqa-worker
+ Container itri-retail-vqa-worker-1  Recreate
+ Container itri-retail-vqa-worker-1  Recreated
+ Container itri-retail-vqa-worker-1  Starting
+ Container itri-retail-vqa-worker-1  Started
+ Container itri-retail-vqa-worker-1  Waiting
+ Container itri-retail-vqa-worker-1  Healthy
+docker compose --project-directory . -f docker/compose.yaml -f docker/compose.vqa.yaml up -d sim
+ Container itri-retail-sim-1  Recreate
+ Container itri-retail-sim-1  Recreated
+ Container itri-retail-sim-1  Starting
+ Container itri-retail-sim-1  Started
+docker compose --project-directory . -f docker/compose.yaml -f docker/compose.vqa.yaml -f docker/compose.realsense.yaml --profile sim --profile camera up -d cameras
+ Container itri-retail-sim-1  Running
+ Container itri-retail-cameras-1  Creating
+ Container itri-retail-cameras-1  Created
+ Container itri-retail-cameras-1  Starting
+ Container itri-retail-cameras-1  Started

@@ -1,8 +1,10 @@
 # ITRI 便利商店機器人系統設計書
 
-OpenArm × TidyBot × NVIDIA Jetson AGX Thor｜v0.3 開發環境基線｜2026-11-10
+OpenArm × TidyBot × NVIDIA Jetson AGX Thor｜v0.5 RealSense／VQA 整合基線｜2026-11-10
 
-本次已建立 CPU 開發入口與 SHA 清單；實際查證和未驗證項目見 [BASELINE](BASELINE.md)，操作見 [README](../README.md)。文中的 ROS 套件與部署節點是整合提案；目前尚未完成任務閉環。
+已建立 ROS 2 相機／VQA／手部 adapters、Nav2 假底盤、MoveIt／雙臂 fake hardware、兩個本地閘門、場景／候選視角與任務管理，並完成隔離的固定目標任務閉環。實際模型回放與實測邊界見 [integration 驗收](validation/2026-11-10-integration.md)，操作見 [README](../README.md)。D435 純 RGB → VQA → RViz 已完成本機擷取與斷流驗收，見 [相機驗收](validation/2026-11-10-realsense-vqa.md)。真機運動、Thor、MASt3R 尺度／融合與真人共域尚未驗收。
+
+本輪把小型整合節點先集中於 `retail_core`，共用訊息在 `retail_interfaces`，配置／launch 在 `retail_bringup`；下面按功能命名的六套件仍是未來拆分提案。不要把目錄提案當成已存在的套件。實際目錄與 Docker 開發 overlay 見 [專案配置](PROJECT_LAYOUT.md)。
 
 ## 1. 系統目標與第一版範圍
 
@@ -150,7 +152,7 @@ VQA 起初只記錄建議與真值對照（shadow mode）。上游型別或標�
 
 **Docker 是必備交付。** 開發、假硬體測試與三機部署均以 Docker Compose 作為標準入口。起始包的 `Dockerfile`、`compose.yaml` 與 `docker/ros_smoke.py` 可用於驗證容器中的 ROS 2 訊息收發。第一個功能里程碑須能在 CPU 容器內重跑假硬體閉環。正式部署再依各主機工作負載建立映像。 [建置與驗收](DOCKER.md)
 
-本輪實作 `ros-smoke`、非 root `dev` 及離線 `dev-check`；開發映像含 Humble、MoveIt 2、Nav2 與 ros2_control。`sim` 是下一個功能階段，真機與 Thor service 須依主機驗收後實作。共用 Dockerfile／ROS 介面與建置規則，兩個 NUC 使用各自的運行映像；Thor 的 ARM64 GPU 映像依實機 JetPack 選擇。不要把 x86 開發映像直接用於 Thor。
+目前提供 `ros-smoke`、非 root `dev`、離線 `dev-check`、已編譯的 `sim` 與選用 `vqa-worker`；整合映像含 Humble、MoveIt 2、Nav2、RealSense 與 ros2_control。真機運動與 Thor service 仍須依主機驗收後實作。共用 Dockerfile／ROS 介面與建置規則，兩個 NUC 使用各自的運行映像；Thor 的 ARM64 GPU 映像依實機 JetPack 選擇，不直接套用 x86 開發映像。
 
 **一個整合 repo，加上上游版本清單。** 自己維護的 ROS 2 套件先放同一 repo。外部程式用 `dependencies.repos` 與 `vcs import` 拉取鎖定 SHA。把被選的套件匯入各主機工作區或建立各自 overlay，避免直接掃進巢狀工作區、測試用重複套件及整套研究原型。Git submodule 留給需要在整合 repo 中管理的 fork 或無法以獨立套件組裝的來源。大型權重、模型快取、實驗 rosbag 與本機校正使用獨立路徑，記錄版本／雜湊。整合 repo 的建議結構如下。
 
@@ -158,8 +160,9 @@ VQA 起初只記錄建議與真值對照（shadow mode）。上游型別或標�
 itri_retail_robot/
   AGENTS.md
   CODEX_PROMPTS.md
-  Dockerfile
-  compose.yaml
+  docker/Dockerfile                # 正式 Docker 定義；實際結構見 PROJECT_LAYOUT
+  compose.yaml                     # include 入口
+  Makefile
   .dockerignore
   docker/ros_smoke.py
   docs/DOCKER.md

@@ -1,0 +1,11 @@
+PASS actual VQA: CONTINUE 30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619 {"observation":"A man is walking through a well-lit store aisle, looking at products on a shelf.","motion":"AWAY_FROM_CAMERA","approach_intent":"UNLIKELY","collision_risk":"LOW","action":"CONTINUE","explanation":"The observed camera-relative motion does not indicate approach in this sampled history."}
+PASS actual upstream MediaPipe hand observation: False valid RGB observation; no hand detected
+[INFO] [launch]: All log files can be found below /home/developer/.ros/log/2026-11-10-11-33-52-410470-52ee04961d43-38
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [vqa_adapter-1]: process started with pid [80]
+[INFO] [hand_adapter-2]: process started with pid [82]
+[INFO] [reconstruction_adapter-3]: process started with pid [84]
+[hand_adapter-2] INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+[hand_adapter-2] WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+[hand_adapter-2] W0000 00:00:1794310433.543155     245 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+[hand_adapter-2] W0000 00:00:1794310433.566363     260 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.

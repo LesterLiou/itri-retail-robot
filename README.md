@@ -1,39 +1,227 @@
-# ITRI 便利商店機器人整合開發
+# ITRI 便利商店機器人整合系統
 
-這裡是整合層：TidyBot 移動載台、OpenArm 雙臂、三視角 VQA、胸口重建及左腕補拍。先建立可重現的 CPU 開發環境，再分階段加入功能。現在交付的是 **P0 開發容器**，尚未實作 P1 任務／假硬體閉環。
+ROS 2 Humble 整合 OpenArm、TidyBot、RealSense 與 VQA。使用、開發、編譯及測試都在 Docker；宿主機只需 Docker Engine／Compose V2、編輯器與瀏覽器，GPU 模式另需 NVIDIA Container Toolkit。
 
-## 立即進入開發
+**目前已實測 D435 RGB → ROS Image → 原有 ConvLSTM／Qwen 模型 → 決策與 RViz 影像。** Nav2／MoveIt 已完成假硬體任務。底盤與手臂仍為 fake hardware，預設禁動；真機運動、Thor、MASt3R 尺度與腕部融合仍待驗收。
 
-在此資料夾的宿主機終端執行：
+## 1. 先選擇要使用的模式
+
+在宿主機專案根目錄執行：
 
 ```bash
-# 首次設定；已有 .env 時保留並檢查內容。
-test -f .env || printf 'LOCAL_UID=%s\nLOCAL_GID=%s\n' "$(id -u)" "$(id -g)" > .env
-docker compose build dev ros-smoke
-docker compose run --rm dev
+cd /home/lester/obstacle_avoid
+make help
 ```
 
-容器內工作目錄為 `/workspace/ros2_ws`；`/workspace` 對應目前資料夾，原始碼與編譯結果會保留。每次進入自動載入 Humble 與已存在的工作區 overlay。已安裝 MoveIt 2、Nav2、ros2_control、Cyclone DDS、colcon、vcstool、rosdep、pytest、OpenCV 及 C++ 編譯工具。模型、CUDA、相機 SDK 與 TidyBot 的 Phoenix runtime 需在相應部署映像另行處理。
+| 目的 | 指令 | 影像／決策來源 | 專案可寫 |
+|---|---|---|---|
+| 純模擬使用 | `make up`、`make shell` | synthetic／fixture | 否 |
+| 純模擬開發 | `make dev` | synthetic／fixture | 是 |
+| 真相機＋真 VQA | `make vqa`、`make shell` | RealSense RGB／checkpoint | 否 |
+| 真相機＋VQA 開發 | `make vqa-dev` | RealSense RGB／checkpoint | 是 |
+| 錄影回放＋真 VQA | `make vqa-video VIDEO=/data/video/0610_take3n4.mp4` | video／checkpoint | 否 |
+
+瀏覽器開啟 **[RViz2 桌面](http://localhost:6080/vnc.html?autoconnect=1&resize=scale)**。RViz 已自動開啟，不需要宿主 X11 或 `xhost`。`docker compose exec sim bash` 與 `make shell` 都能進入目前的容器，不會切換模式；shell 自動載入 ROS 與適用 overlay，`DISPLAY=:99`。
+
+上述模式共用同一個 sim service。切換模式或重新啟動前，先完成／取消正在進行的假硬體任務；切換後不重播舊 goal。`make up`／`make dev`／影片模式會先停止相機，避免同一 topic 有兩個擷取者。
+
+## 2. 現在的架構與 Docker 關係
+
+```mermaid
+flowchart LR
+    USB[RealSense D435] --> CAM["cameras 容器\nRealSense ROS 2 driver"]
+    CAM -->|"RGB + CameraInfo\n共用 sim 網路 namespace"| ROS
+    subgraph ROS["sim 容器：Humble ROS 2 + RViz"]
+        AD[VQA Image adapter]
+        HAND[MediaPipe 手部觀測]
+        TASK[任務管理與本地閘門]
+        NAV[Nav2 + 假底盤]
+        ARM[MoveIt + OpenArm fake hardware]
+        GUI[RViz + noVNC]
+        AD --> TASK
+        HAND --> TASK
+        TASK --> NAV
+        TASK --> ARM
+        AD --> GUI
+    end
+    AD -->|"有界 HTTP 請求"| GPU["vqa-worker 容器\nMobileNetV3 + ConvLSTM + Qwen3"]
+    GPU -->|"帶時間戳的模型建議／證據"| AD
+    GUI --> WEB["瀏覽器 localhost:6080"]
+```
+
+| Service | 使用的 image／職責 | 掛載與權限 |
+|---|---|---|
+| `sim` | `humble-sim`；所有整合 ROS 節點、Nav2、MoveIt、假機器人與桌面 | 標準 `/workspace:ro`；開發 overlay 改為 rw；無相機／馬達設備 |
+| `cameras` | 與 sim **同一 image、獨立程序**；只跑 RealSense driver | 指定 UVC 節點、USB、唯讀相機配置；無馬達設備 |
+| `vqa-worker` | 獨立 GPU image；保留模型原 Python／Torch 環境 | GPU、唯讀原始碼與 checkpoint；HTTP 8090 只在 Compose 網路內 |
+| `dev` | `humble-dev`；獨立 colcon／來源取得工具鏈 | 專案 rw；不啟動整合桌面，也不載入依賴 sim 的 overlay |
+| `dev-check`／`ros-smoke` | 工具鏈／ROS 收發驗收 | CPU、無硬體；各自隔離 |
+| `camera-probe` | 一次性 RealSense 探測，`make camera-list` 使用 | 與相機相同的設備授權；執行完刪除 |
+| `mast3r-worker` | 選用重建 worker | 需另提供已驗證 runtime／模型，目前未驗收 |
+
+`docker/Dockerfile` 的關係是 `common → dev → sim`，smoke 從 common 分支。`cameras` 不另建映像，直接重用 sim。GPU worker 使用 `docker/Dockerfile.vqa`，和 ROS Python 3.10 分開，透過 ROS adapter 交付資料。模型不直接發布運動命令。
+
+現在是單主機整合配置。正式三機規劃為：TidyBot NUC 執行底盤驅動／Nav2／底盤閘門，OpenArm NUC 執行 MoveIt／手臂驅動／手臂閘門／任務管理，Thor 執行 GPU 感知。相機 driver 放在實際接 USB 的主機。開發用 loopback DDS 與 x86 映像不能直接當作三機／Thor 配置。
+
+## 3. 啟動 RealSense 與真正 VQA
+
+### 本機配置
+
+這台電腦已設定 `.env`、D435 的本機配置和可用 GPU image。沒有把權重或設備序號提交到 Git。新電腦先保留／建立 `.env`，參考 `.env.example`：
+
+```dotenv
+LOCAL_UID=1000
+LOCAL_GID=1000
+VQA_CHECKPOINT_DIR=/absolute/path/to/checkpoints/robot_vqa_recovery_v1/c_policy/best
+VIDEO_DIR=/absolute/path/to/video/directory
+# 選用：直接唯讀使用既有 VLMotion 程式；未設定則使用鎖定的 external 版本
+VQA_SOURCE_DIR=/home/lester/VLMotion/ros2_ws/src/lightweight_risk_vqa
+REALSENSE_CONFIG=./config/local/cameras.yaml
+VIDEO_GID=44
+```
+
+UID／GID 以 `id -u`／`id -g` 為準。複製相機範本並填入實際序號：
 
 ```bash
-# 宿主機：驗收環境
-docker compose run --rm ros-smoke
+mkdir -p config/local
+# 已有本機配置時保留，不覆蓋
+cp -n ros2_ws/src/retail_bringup/config/cameras.example.yaml config/local/cameras.yaml
+make camera-list
+```
+
+預設只啟用 chest，純 RGB 640×480／15 FPS、depth 與 infrared 關閉。多相機必須填各自唯一序號。`color_profile` 可在各相機配置設定。UVC 授權範本為 `/dev/video0` 到 `/dev/video5`，需依 Docker 主機實際裝置調整 `RS_VIDEO0…RS_VIDEO5` 與 video 群組；更多相機的額外節點要明確加入 `docker/compose.realsense.yaml`，不能只填序號就假設所有設備已授權。
+
+### 啟動與查看
+
+```bash
+# 宿主機；等待模型健康後啟動 ROS 與相機
+make vqa
+make shell
+```
+
+容器內：
+
+```bash
+ros2 topic hz /cameras/chest/color/image_raw
+ros2 topic echo /perception/vqa/chest
+# 唯讀端到端驗收，不發運動命令
+python3 /workspace/scripts/check_realsense.py stream
+```
+
+其他宿主終端可執行 `make camera-logs`、`docker compose logs -f vqa-worker`。RViz 左側顯示胸口影像與 action／證據，三維視窗顯示機器人、地圖、貨架示範點雲與任務狀態。
+
+```bash
+# 停止相機後應出現 DATA_LOSS；不會把斷流當作空場
+make camera-stop
+# 在仍運行的 sim 容器內檢查
+# python3 /workspace/scripts/check_realsense.py loss --timeout 15
+make vqa       # 重新啟動相機與模型路徑
+```
+
+`make vqa-dev` 可直接進入同一條真相機／模型管線的可寫開發環境。改程式後退出 shell，執行 `make dev-build`，再 `make vqa-dev` 重新建立 sim 與相機 namespace、載入 overlay。相機運行時 `make dev-restart` 會拒絕單獨重啟，避免 driver 留在舊網路 namespace。
+
+### VQA 與 /home/lester/VLMotion 的對應
+
+目前參考並唯讀使用 `lightweight_risk_vqa` 的 **vqa-only** 路線：MobileNetV3、ConvLSTM 時間記憶、Qwen3-0.6B。沿用 `c_policy/best`、`robot_vqa.py` 的 `ROBOT_QUERY`／schema 驗證及 `robot_decoding.py` 的 constrained decoder。模型與 prompt 的 hash 會附在 ROS 訊息中；每個相機的記憶、時間戳與 source epoch 分開管理。
+
+這裡用 `docker/vqa_worker.py` 將原模型接成無 UI 的推論服務，再由 `retail_core/vqa.py` 接 ROS Image。原專案的 Qt UI、YOLO-assisted 與舊 bbox baseline 仍留在 VLMotion，並未宣稱全部移植。本輪沒有重訓、改權重、切換 compact prompt，或以 bbox 規則覆寫模型 action。
+
+`CONTINUE`、`DANGER_WARNING`、`STOP`、`OBSERVE` 是模型建議；`DATA_LOSS` 表示影像／回答／時效失效。fixture 的 `NO_DETECT` 是明確標示的合成空觀測。合法 JSON 與啟動成功不代表風險判斷準確；模型偶爾仍有錯誤文字或 schema 拒絕，保留 raw 回答供比對。
+
+## 4. 第一次建置、新增依賴與日常開發
+
+來源管理採 **`dependencies.repos`＋完整 SHA**，不使用 submodule。自己的三個套件在 `ros2_ws/src`，四個上游在忽略的 `external/`；取得工具遇到 dirty／不同 SHA 會拒絕覆寫。權重、影片與本機校正另外掛載。
+
+```bash
+# 宿主機：首次建置；已有 .env 時保留
+# 先依 .env.example 填 UID/GID 與資產路徑
+docker compose build dev
+docker compose run --rm dev python3 /workspace/scripts/fetch_sources.py
+make build
+# GPU worker 首次建置，已有本機驗證 image 可略過
+make vqa-build
+```
+
+純模擬開發：
+
+```bash
+make dev
+# 已在容器內：
+cd /workspace/ros2_ws
+python3 /usr/bin/colcon build --symlink-install \
+  --packages-select retail_interfaces retail_core retail_bringup
+source install/setup.bash
+exit
+# 宿主機：重新載入程式，回到 IDLE／禁動
+make dev-restart
+make shell
+```
+
+也可用宿主機的 `make dev-build` 代替編譯指令，實際仍在 Docker 執行。標準版本載入 `/opt/retail_ws/install`，開發模式在其上載入 `/workspace/ros2_ws/install`；`RETAIL_BAKED_ONLY` 分別為 1／0。改 apt／Python 相依或上游來源時更新 `docker/Dockerfile`／requirements，重新 `make build`；不用在運行中的容器手動裝依賴作為部署結果。
+
+## 5. 模擬任務與其他功能
+
+```bash
+# 宿主機：停止真相機、回到 CPU fixture
+make up
+make shell
+# 容器內：
+ros2 run retail_core demo_control navigate
+ros2 run retail_core demo_control run
+ros2 run retail_core demo_control place
+ros2 topic echo /mission/state
+```
+
+`run` 串接導航→固定姿態停靠→禁動底盤→掃描→左腕候選補拍→右臂放置→退回。貨架、商品、裝配 TF、候選觀測與放置目標屬已知模擬基線；不代表完成真實商品辨識、ArUco 閉環或未知場景主動重建。
+
+模擬故障操作為 `demo_control obstacle`、`clear`、`cancel`、`reset`。clear 不解除 STOP；reset 必須有實測停止與雙臂收納。RViz 的 2D Goal Pose 可發新 Nav2 goal，先明確呼叫 `/base_gate/enable`，但這不繞過觀測／互鎖檢查。VQA 本身不釋放停機鎖。
+
+| 功能 | 容器內獨立入口／邊界 |
+|---|---|
+| VQA／手部／重建 adapters | `ros2 launch retail_bringup perception.launch.py` |
+| 手臂場景／略過導航 | `ros2 launch retail_bringup sim.launch.py navigation:=false`；強制 fake hardware |
+| RealSense | `ros2 launch retail_bringup realsense.launch.py config:=/config/cameras.yaml`；相機容器已有此配置掛載 |
+| ArUco 停靠 | `ros2 launch retail_bringup docking.launch.py config:=/config/docking.yaml`；需實測標定與目標配置 |
+| MASt3R worker | `docker/compose.mast3r.yaml`；需提供已驗證 image、runtime 與權重 |
+
+整合 launch 已包含主要 ROS 節點，獨立測試前先停原管線，避免同一 graph 重複啟動。MASt3R adapter 的 raw cloud 屬 `mast3r_map`、`metric_valid=false`；未驗證尺度、對齊及融合前不能送入有效 MoveIt 場景。手部目前走純 RGB 保守暫停，不從舊貨架點雲補造手部深度。
+
+## 6. 主要 ROS 介面
+
+| 接口 | 型別／用途 |
+|---|---|
+| `/cameras/<camera>/color/image_raw`、`camera_info` | Image／CameraInfo；擷取時間、optical frame、內參 |
+| `/perception/vqa/<camera>` | RiskAdvisory；action、raw、證據、hash、來源、有效期 |
+| `/perception/vqa/<camera>/annotated` | Image；RViz 決策影像 |
+| `/perception/hand/state` | ObstacleState；有效空觀測／手部／失效 |
+| `/perception/shelf/{cloud,state}` | PointCloud2／SceneState；場景 revision、尺度品質 |
+| `/navigation/cmd_vel`、`/docking/cmd_vel`、`/teleop/cmd_vel` | Twist；進唯一仲裁與底盤閘門 |
+| `/base/{cmd_vel,enable,control_frame}` | 唯一底盤出口；保留全向 vy |
+| `/odom`、`/joint_states` | 目前為假硬體回饋，真機需替換並驗收 |
+| `/<side>_joint_trajectory_controller/follow_joint_trajectory` | arm gate 公開 FollowJointTrajectory action |
+| `/hardware/<side>_joint_trajectory_controller/follow_joint_trajectory` | 私有控制器入口；只由 arm gate 寫入 |
+| `/mission/state`、`/base/gate_state`、`/arm/gate_state` | 任務與互鎖狀態 |
+
+## 7. 檔案整理與驗收
+
+Docker 的 Dockerfile、Compose overlays、worker、入口腳本都集中在 **`docker/`**。根目錄 `compose.yaml` 只 include 正式設定，保留 `docker compose exec sim bash` 等日常操作；`.dockerignore` 留在 build context 根目錄。套用 overlay 時使用 Makefile，或明確從根目錄指定：
+
+```bash
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.vqa.yaml -f docker/compose.realsense.yaml \
+  --profile sim --profile camera ps
+```
+
+不要把根目錄 include 入口與 Docker 子目錄 overlay 混用在同一 `-f` 鏈。來源在 `ros2_ws/src`，模型／影片不進 Git，本機配置在 `config/local`，編譯／快取產物忽略，具日期的驗收證據保留在 `docs/validation`。
+
+```bash
+# 宿主機：完整隔離 CPU 驗收，會重建 sim；先停止相機
+make camera-stop
+bash scripts/verify_integration.bash /tmp/retail-integration-verification
+# 工具鏈驗收
 docker compose run --rm dev-check
-
-# 選用：保持開發容器，從其他終端進入同一 ROS graph
-docker compose up -d dev
-docker compose exec dev bash
-docker compose stop dev
+# 停止本專案相機、模擬、工具與 GPU worker
+make stop
 ```
 
-`dev` 有一般容器網路以取得依賴，ROS 限本機；`ros-smoke`／`dev-check` 禁用外部網路。預設不啟動真機、不映射設備或 Docker socket，也不使用 host network。RViz 套件已安裝，顯示轉送尚未配置；此入口先做無視窗開發與驗收。
-
-## 接下來讀什麼
-
-- [系統設計](docs/SYSTEM_DESIGN.md)：三機分工、流程、資料與控制權。
-- [實際查證基線](docs/BASELINE.md)：本機環境、上游 SHA、程式接點、未驗證事項。
-- [Docker 操作](docs/DOCKER.md)：建置、測試、權限及三機映像邊界。
-- [來源與套件取得](docs/DEPENDENCIES.md)：哪些 repo 要抓、哪些套件要用。
-- [Codex 任務卡](CODEX_PROMPTS.md) 與 [開發規範](AGENTS.md)。
-
-建議採 **一個整合 repo + SHA 鎖定的外部 repo**。整合套件放 `ros2_ws/src`，上游放 `external`。本資料夾目前沒有可用的 Git repository；需在一般宿主機終端建立／連結整合 repo，保留現在的檔案。本次未執行 `git init`、commit 或推送。
+實測與限制：[RealSense＋VQA 驗收](docs/validation/2026-11-10-realsense-vqa.md)、[既有整合驗收](docs/validation/2026-11-10-integration.md)。其他文件：[實際目錄](docs/PROJECT_LAYOUT.md)、[系統設計](docs/SYSTEM_DESIGN.md)、[來源選集](docs/DEPENDENCIES.md)、[Docker 詳解](docs/DOCKER.md)、[開發規範](AGENTS.md)、[Codex 任務卡](CODEX_PROMPTS.md)。

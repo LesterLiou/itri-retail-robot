@@ -1,0 +1,2 @@
+PASS actual VQA: STOP 30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619 {"observation":"people in the view appear to be in the current image and are not objects in the view.","motion":"TOWARD_CAMERA","approach_intent":"LIKELY","collision_risk":"IMMINENT","action":"STOP","explanation":"no more visible evidence supports this decision"}
+PASS actual upstream MediaPipe hand observation: False valid RGB observation; no hand detected
