@@ -1,0 +1,7 @@
+0
+external
+http
+:99
+/workspace/ros2_ws/install/retail_core
+PASS RealSense stream: {"frames": 15, "frame": "chest_color_optical_frame", "action": "DANGER_WARNING", "valid": true, "reason": "", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "prompt_id": "d02131eab27f7639a650c3bcca26baae02ad80fd3d0f3558f8ed14e2ce070f21", "source": "external:53084861f3454efd88b40654166b70c5/aceb3dfc63a141dea69e89f4841bc1e9", "observation": "A person is walking in the scene.", "explanation": "Person scale increases across the sampled history; approach is a hypothesis.", "robot_enabled": false}
+PASS restart: IDLE, measured stow/standstill, disabled, no goal replay

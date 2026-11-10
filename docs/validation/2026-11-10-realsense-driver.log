@@ -1,0 +1,32 @@
+cameras-1  | [INFO] [launch]: All log files can be found below /home/developer/.ros/log/2026-11-10-12-53-38-194003-715c77d4712c-7
+cameras-1  | [INFO] [launch]: Default logging verbosity is set to INFO
+cameras-1  | [33mWarning: Parameter 'config' is not supported. Supported parameters are:
+cameras-1  | ['accel_fps', 'accelerate_gpu_with_glsl', 'align_depth.enable', 'angular_velocity_cov', 'base_frame_id', 'camera_name', 'camera_namespace', 'clip_distance', 'colorizer.enable', 'config_file', 'decimation_filter.enable', 'decimation_filter.filter_magnitude', 'depth_mapping_camera.labeled_point_cloud_profile', 'depth_mapping_camera.occupancy_profile', 'depth_module.color_format', 'depth_module.color_profile', 'depth_module.depth_format', 'depth_module.depth_profile', 'depth_module.enable_auto_exposure', 'depth_module.exposure', 'depth_module.exposure.1', 'depth_module.exposure.2', 'depth_module.gain', 'depth_module.gain.1', 'depth_module.gain.2', 'depth_module.hdr_enabled', 'depth_module.infra1_format', 'depth_module.infra2_format', 'depth_module.infra_format', 'depth_module.infra_profile', 'depth_module.inter_cam_sync_mode', 'device_type', 'diagnostics_period', 'disparity_filter.enable', 'enable_accel', 'enable_color', 'enable_depth', 'enable_gyro', 'enable_infra', 'enable_infra1', 'enable_infra2', 'enable_labeled_point_cloud', 'enable_motion', 'enable_occupancy', 'enable_rgbd', 'enable_safety', 'enable_sync', 'gyro_fps', 'hdr_merge.enable', 'hole_filling_filter.enable', 'initial_reset', 'json_file_path', 'linear_accel_cov', 'log_level', 'motion_fps', 'occupancy_max_range', 'output', 'pointcloud.allow_no_texture_points', 'pointcloud.enable', 'pointcloud.ordered_pc', 'pointcloud.stream_filter', 'pointcloud.stream_index_filter', 'publish_tf', 'reconnect_timeout', 'rgb_camera.color_format', 'rgb_camera.color_profile', 'rgb_camera.enable_auto_exposure', 'rosbag_filename', 'rosbag_loop', 'rotation_filter.enable', 'rotation_filter.rotation', 'safety_camera.safety_mode', 'serial_no', 'spatial_filter.enable', 'temporal_filter.enable', 'tf_prefix', 'tf_publish_rate', 'unite_imu_method', 'usb_port_id', 'wait_for_device_timeout'][0m
+cameras-1  | [INFO] [launch.user]: 🚀 Launching as Normal ROS Node
+cameras-1  | [INFO] [realsense2_camera_node-1]: process started with pid [23]
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.262226281] [cameras.chest]: RealSense ROS v4.58.4[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.262275660] [cameras.chest]: Built with LibRealSense v2.58.4[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.262281020] [cameras.chest]: Running with LibRealSense v2.58.4[0m
+cameras-1  | [realsense2_camera_node-1]  10/11 12:53:38,262 WARNING [132801070827072] (context.cpp:41) No valid configuration file found at : /home/developer/.realsense-config.json loading defaults
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346219371] [cameras.chest]: Device with serial number <local_serial> was found.
+cameras-1  | [realsense2_camera_node-1] [0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346270622] [cameras.chest]: Device with physical ID /sys/devices/pci0000:00/0000:00:14.0/usb2/2-2/2-2:1.0/video4linux/video0 was found.[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346276513] [cameras.chest]: Device with name RealSense D435 was found.[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346369764] [cameras.chest]: Device with port number 2-2 was found.[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346374811] [cameras.chest]: Device USB type: 3.2[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346380307] [cameras.chest]: Starting device RealSense D435 (Product ID: 0x0B07)[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346417902] [cameras.chest]: getParameters...[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346553363] [cameras.chest]: JSON file is not provided[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346558389] [cameras.chest]: Device Name: RealSense D435[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346562767] [cameras.chest]: Device Serial No: <local_serial>[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346566813] [cameras.chest]: Device physical port: /sys/devices/pci0000:00/0000:00:14.0/usb2/2-2/2-2:1.0/video4linux/video0[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346570965] [cameras.chest]: Device FW version: 5.13.0.55[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346576606] [cameras.chest]: Device Product ID: 0x0B07[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.346580403] [cameras.chest]: Sync Mode: Off[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.427883420] [cameras.chest]: Set ROS param depth_module.depth_profile to default: 848x480x30[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.428193146] [cameras.chest]: Set ROS param depth_module.infra_profile to default: 848x480x30[0m
+cameras-1  | [realsense2_camera_node-1] [33m[WARN] [1794315218.431438647] [cameras.chest]: re-enable the stream for the change to take effect.[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.432829314] [cameras.chest]: Stopping Sensor: RGB Camera[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.438464152] [cameras.chest]: Starting Sensor: RGB Camera[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.439731350] [cameras.chest]: Open profile: stream_type: Color(0), Format: RGB8, Width: 640, Height: 480, FPS: 15[0m
+cameras-1  | [realsense2_camera_node-1] [0m[INFO] [1794315218.441476301] [cameras.chest]: RealSense Node Is Up![0m

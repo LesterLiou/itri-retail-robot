@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import time
 import rclpy
@@ -73,7 +74,10 @@ def main():
                 node.until(lambda:node.risk.valid and node.hand.valid,timeout=15)
                 until=time.monotonic()+0.2
                 while time.monotonic()<until: rclpy.spin_once(node,timeout_sec=.02)
-                subprocess.run(['import','-display',':99','-window','root','/tmp/retail-rviz-vqa.png'],check=True)
+                windows = subprocess.check_output(['xwininfo','-root','-tree'],text=True)
+                window = re.search(r'^\s*(0x[0-9a-f]+).*retail\.rviz.*RViz',windows,re.MULTILINE)
+                assert window, 'No retail RViz window on the native display'
+                subprocess.run(['import','-display',os.environ['DISPLAY'],'-window',window[1],'/tmp/retail-rviz-vqa.png'],check=True)
             return
         node.until(lambda:node.gate and node.odom and node.risk)
         if args.mode=='restart':

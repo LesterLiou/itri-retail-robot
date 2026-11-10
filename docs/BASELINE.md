@@ -1,5 +1,9 @@
 # 整合開發基線
 
+## 2026-11-10 本機顯示器更新
+
+依目前需求已移除虛擬桌面、VNC、網頁服務與其 port，重建 dev／sim 映像。預設使用宿主 DISPLAY、私人 Xauthority 和唯讀 X11 socket，RViz 直接在 Ubuntu 桌面開視窗；純 CPU 模式不開任何顯示伺服器。各 Compose 用法見 README 第 7 節，本輪驗收見 [本機 RViz](validation/2026-11-10-native-display.md)。下面含網頁桌面的紀錄保留為歷史快照。
+
 ## 2026-11-10 相機與目錄更新
 
 已透過 Docker daemon 實際找到 D435，啟動 RGB 640×480／15 FPS，並接上 VLMotion 的真實 checkpoint 與訓練相容 constrained VQA。代理環境的 /dev 與 sysfs 不能代表 Docker 主機的設備可見性，因此以 camera-probe／SDK 和實際 ROS 影像為準；序號存本機 config/local。Docker 定義移入 docker/，根 Compose 保留 include 入口。結果與版本見 [RealSense/VQA 驗收](validation/2026-11-10-realsense-vqa.md)。下面「未列出相機」保留為先前階段的觀察，不代表目前狀態。

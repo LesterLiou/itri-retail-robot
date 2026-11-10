@@ -2,5 +2,5 @@
 # For overrides use Makefile or explicit --project-directory . -f docker/compose.yaml.
 name: itri-retail
 include:
-  - path: docker/compose.yaml
+  - path: [docker/compose.yaml, docker/compose.local.yaml]
     project_directory: .

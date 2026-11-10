@@ -29,11 +29,6 @@ Visualization Manager:
       Durability Policy: Transient Local
     Visual Enabled: true
     Collision Enabled: false
-  - Class: rviz_default_plugins/Marker
-    Name: Decisions and Task Status
-    Enabled: true
-    Topic:
-      Value: /retail/status_markers
   - Class: rviz_default_plugins/Path
     Name: Navigation Plan
     Enabled: true
@@ -65,6 +60,23 @@ Visualization Manager:
     Topic:
       Value: /perception/hand/annotated
       Reliability Policy: Best Effort
+  - Class: moveit_rviz_plugin/MotionPlanning
+    Name: MoveIt Motion Planning
+    Enabled: true
+    Robot Description: robot_description
+    Planning Scene Topic: /monitored_planning_scene
+    Planning Request:
+      Planning Group: right_arm
+      Query Goal State: true
+      Query Start State: false
+      Interactive Marker Size: 0.2
+    Scene Robot:
+      Robot Visual Enabled: false
+      Robot Collision Enabled: false
+    Planned Path:
+      Trajectory Topic: /display_planned_path
+      Loop Animation: false
+      State Display Time: 0.05 s
   Tools:
   - Class: rviz_default_plugins/Interact
   - Class: rviz_default_plugins/MoveCamera

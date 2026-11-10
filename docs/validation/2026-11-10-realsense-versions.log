@@ -1,0 +1,8 @@
+[itri-retail-robot:humble-dev] sha256:c35b800cbd12314c899d6e555b2607967e7258ff0e2df6aa2dec44f0670f0365
+[itri-retail-robot:humble-sim] sha256:6f1cca55f1d379bf2b8b753974371262d67644d1abfb833fcfe95919a9541b21
+[itri-retail-robot:vqa-worker] sha256:5dd032c358dd4dc253c98e4d5763c876f25ea17f97ce55b3fd8cd253607b3672
+ros-humble-librealsense2	2.58.4-1jammy.20260830.174155
+ros-humble-realsense2-camera	4.58.4-1jammy.20260915.211150
+ros-humble-realsense2-description	4.58.4-1jammy.20260908.002050
+3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]
+torch 2.10.0+cu128 transformers 5.15.0

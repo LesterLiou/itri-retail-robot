@@ -1,16 +1,23 @@
 .DEFAULT_GOAL := help
 COMPOSE := docker compose --project-directory . -f docker/compose.yaml
+GUI ?= 1
+ifneq ($(GUI),0)
+COMPOSE += -f docker/compose.local.yaml
+GUI_PREREQ := gui-setup
+endif
 EDIT := $(COMPOSE) -f docker/compose.dev.yaml
 VQA := $(COMPOSE) -f docker/compose.vqa.yaml
 VQA_EDIT := $(VQA) -f docker/compose.dev.yaml
 CAMERA := $(VQA) --profile sim --profile camera
 export VIDEO
 
-.PHONY: help build up shell dev dev-build dev-restart status logs stop vqa vqa-dev vqa-video vqa-build camera-list camera-logs camera-stop
+.PHONY: help build up shell dev dev-build dev-restart status logs stop vqa vqa-dev vqa-video vqa-build camera-list camera-logs camera-stop gui-setup
 help:
 	@printf '%s\n' \
 	  'make build        Build the pinned-source simulation image' \
-	  'make up           Start baked simulation + RViz desktop (localhost:6080)' \
+	  'make up           Start simulation + native RViz window on your desktop' \
+	  'make gui-setup    Prepare current desktop Xauthority (never prints cookies)' \
+	  'make up GUI=0     Start headless simulation without a display server' \
 	  'make shell        Enter the running simulation container' \
 	  'make dev          Start editable simulation + enter its shell' \
 	  'make dev-build    Build the three integration packages in editable mode' \
@@ -89,3 +96,8 @@ camera-logs:
 
 camera-stop:
 	$(CAMERA) stop cameras
+
+gui-setup:
+	python3 scripts/prepare_gui.py
+
+up dev dev-restart vqa vqa-dev vqa-video: $(GUI_PREREQ)

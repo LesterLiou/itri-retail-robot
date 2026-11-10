@@ -92,6 +92,7 @@ def start(context):
         Node(package='retail_core',executable='mission_manager',output='screen'),
         IncludeLaunchDescription(PythonLaunchDescriptionSource(str(package/'launch/perception.launch.py')),launch_arguments={
             'vqa_backend':value('vqa_backend'),'hand_backend':value('hand_backend'),
+            'vqa_mode':value('vqa_mode'),
             'cameras':value('cameras'),'worker_url':value('worker_url'),
             'input_source':value('camera_source'),
             'reconstruction_url':value('reconstruction_url')}.items()),
@@ -123,7 +124,7 @@ def start(context):
 
 
 def generate_launch_description():
-    defaults = {'rviz':'false','navigation':'true','vqa_backend':'fixture','hand_backend':'fixture',
+    defaults = {'rviz':'false','navigation':'true','vqa_backend':'fixture','hand_backend':'fixture','vqa_mode':'vqa-only',
                 'camera_source':'synthetic','scene_backend':'known_fixture','video_path':'','cameras':'chest',
                 'worker_url':'http://vqa-worker:8090/infer','reconstruction_url':''}
     return LaunchDescription([*(DeclareLaunchArgument(k,default_value=v) for k,v in defaults.items()),OpaqueFunction(function=start)])

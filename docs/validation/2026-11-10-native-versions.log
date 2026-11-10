@@ -1,0 +1,6 @@
+[itri-retail-robot:humble-dev] sha256:a14183af4e633c29e13886891f453a05ae7fa8d74d825b93e8c339cc7104b05b
+[itri-retail-robot:humble-sim] sha256:6dcdbc48bab72d661abb98b815adfcfdbff8b466a762189a04caa730829ea50d
+:1
+1
+/workspace/config/local/gui.Xauthority
+ros-humble-rviz2	11.2.29-1jammy.20260916.003100

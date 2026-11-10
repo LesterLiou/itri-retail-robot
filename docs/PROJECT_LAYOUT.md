@@ -4,7 +4,7 @@
 
 ```text
 obstacle_avoid/
-  compose.yaml                 # include docker/compose.yaml，保留直接 docker compose 操作
+  compose.yaml                 # include 共用＋本機顯示設定，保留直接 docker compose 操作
   Makefile                     # make help；啟動、開發、相機、VQA
   .dockerignore                # 根 build context 的忽略規則
   .env.example                 # 本機配置範例；.env 不進 Git
@@ -12,12 +12,13 @@ obstacle_avoid/
     Dockerfile                 # common / smoke / dev / sim
     Dockerfile.vqa             # GPU worker Python/Torch 環境
     compose.yaml               # 正式共用服務
+    compose.local.yaml         # 唯讀掛載本機 X11 socket，使用私人授權
     compose.dev.yaml           # 可寫 sim workspace 與 colcon overlay
     compose.vqa.yaml           # 真模型＋外部相機來源
     compose.vqa-build.yaml     # GPU 映像建置
     compose.realsense.yaml     # 相機 driver 與一次性 camera-probe
     compose.mast3r.yaml        # 選用 MASt3R，需實機驗證環境
-    run_sim.bash                # ROS launch 與容器內桌面
+    run_sim.bash                # ROS launch；可直接開本機 RViz 視窗
     setup.bash / entrypoint.bash
     vqa_worker.py / mast3r_worker.py
     requirements-perception.txt / cyclonedds-local.xml
@@ -36,12 +37,12 @@ obstacle_avoid/
   AGENTS.md / CODEX_PROMPTS.md  # 開發規範與任務卡
 ```
 
-`sim` 與 `cameras` 共用 humble-sim image，但運行在不同容器。只有 cameras 取得指定相機設備；它共用 sim 的 network namespace，以 localhost DDS 交付影像。`vqa-worker` 使用自己的 GPU image，透過 Compose DNS／HTTP 供 ROS adapter 呼叫。桌面在 sim，瀏覽器連 localhost:6080。
+`sim` 與 `cameras` 共用 humble-sim image，但運行在不同容器。只有 cameras 取得指定相機設備；它共用 sim 的 network namespace，以 localhost DDS 交付影像。`vqa-worker` 使用自己的 GPU image，透過 Compose DNS／HTTP 供 ROS adapter 呼叫。RViz 在 sim 執行，視窗直接出現在本機 Ubuntu 桌面。沒有額外的顯示伺服器或網頁服務。
 
 開發 `make dev`／`make vqa-dev` 將 `/workspace` 改為可寫，使用映像的 `/opt/retail_ws/install` 為 underlay，並載入 `/workspace/ros2_ws/install` overlay。編譯仍在容器中執行，無須宿主 ROS。標準使用 `make up`／`make vqa` 不載入開發 overlay，工作區唯讀。
 
 `make shell` 只進入當前模式。純模擬編譯後用 `make dev-restart`；真相機開發編譯後用 `make vqa-dev` 重新啟動相機與 sim，避免相機停留在已替換的網路 namespace。改依賴或上游後重建映像。
 
-套用 overlay 時以 Makefile 或 `docker compose --project-directory . -f docker/compose.yaml -f docker/compose.<mode>.yaml ...` 為準；不要將根目錄的 include 入口當作 override 鏈的第一份檔案。`docker compose exec sim bash`／`docker compose logs sim` 則繼續可用。
+make 預設加入本機顯示設定並準備授權；`GUI=0` 則只開 ROS。套用 overlay 時以 Makefile 或 `docker compose --project-directory . -f docker/compose.yaml -f docker/compose.<mode>.yaml ...` 為準；不要將根目錄的 include 入口當作 override 鏈的第一份檔案。`docker compose exec sim bash`／`docker compose logs sim` 則繼續可用。
 
 目前三個整合套件保留在同一 repo；系統設計中的六功能套件與三機部署拆分仍是後續提案，不放佔位空殼。模型、影片、編譯產物、快取與 core dump 不進 Git。既有修改、權重、上游和驗收紀錄均保留，未執行 Docker 全域 prune。

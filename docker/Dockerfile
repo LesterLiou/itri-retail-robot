@@ -24,8 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-realsense2-camera ros-humble-realsense2-description \
     ros-humble-image-transport-plugins ros-humble-joint-state-publisher \
     ros-humble-joint-state-publisher-gui \
-    python3-pyqt5 python3-pil xvfb xauth x11-utils x11vnc \
-    novnc websockify fluxbox imagemagick libgl1-mesa-dri mesa-utils \
+    python3-pyqt5 python3-pil xauth x11-utils \
+    imagemagick libgl1-mesa-dri mesa-utils \
     && rm -rf /var/lib/apt/lists/*
 
 ARG USER_UID=1000
@@ -43,6 +43,11 @@ USER developer
 WORKDIR /workspace/ros2_ws
 ENTRYPOINT ["/bin/bash", "/opt/itri/entrypoint.bash"]
 CMD ["bash"]
+
+FROM dev AS model-tools
+USER root
+RUN python3 -m pip install --no-cache-dir usd-core==25.11
+USER developer
 
 FROM dev AS sim
 USER root

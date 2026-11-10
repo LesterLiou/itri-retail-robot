@@ -1,0 +1,18 @@
+<robot name="tidybot_platform">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://retail_description/meshes/tidybot_chassis.stl" />
+      </geometry>
+      <material name="tidybot_gray">
+        <color rgba="0.35 0.37 0.4 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.15799999702721834" />
+      <geometry>
+        <box size="0.5479999966919422 0.5080000162124634 0.3159999940544367" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

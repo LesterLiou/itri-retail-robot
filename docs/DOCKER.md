@@ -2,13 +2,19 @@
 
 ## Docker 整合系統入口
 
-目前新增 `sim` 與 `vqa-worker`，操作以 [README](../README.md) 為準。`sim` 在映像內編譯所有選定 ROS 套件，提供 Nav2／OpenArm fake hardware、RViz2／noVNC、感知 adapters 和本地閘門；只綁 localhost:6080，不映射實體設備。`vqa-worker` 為選用 GPU 容器，唯讀掛載模型，由 ROS adapter 交付結果。CPU 模式與真實推論結果分開標記。
+目前新增 `sim` 與 `vqa-worker`，操作以 [README](../README.md) 為準。`sim` 在映像內編譯所有選定 ROS 套件，提供 Nav2／OpenArm fake hardware、本機 RViz2 視窗、感知 adapters 和本地閘門；透過本機 X11／XWayland 顯示，不映射馬達設備。`vqa-worker` 為選用 GPU 容器，唯讀掛載模型，由 ROS adapter 交付結果。CPU 模式與真實推論結果分開標記。
 
 `docker/compose.realsense.yaml` 是明確選擇的相機硬體入口；`docker/compose.mast3r.yaml` 要求提供驗證過的 GPU runtime／模型，不提供猜測的 Thor 映像。兩者均不啟動馬達。實際驗收、映像與未執行項目見 [integration 紀錄](validation/2026-11-10-integration.md)。下面 P0 說明保留其測試範圍，不代表現在仍只有三個 service。
 
 Docker Compose 是開發、模擬與三機部署的共同入口。目前提供 ROS 2 Humble smoke 映像、可編譯的 CPU 開發映像與開發工具鏈驗收。底盤、手臂及 Thor 工作負載的正式映像在查明套件與硬體版本後，依下列要求實作。本輪實測見 [驗收紀錄](validation/2026-11-10-dev.md)。
 
-日常使用 `make up`／`make shell`；整合開發使用 `make dev`、`make dev-build`、`make dev-restart`。開發模式以 `docker/compose.dev.yaml` 將同一 sim 工作區設為可寫，使用容器內編譯的 overlay。完整目錄與操作見 [專案配置](PROJECT_LAYOUT.md)。Compose 已配置所有 exec shell 的 `DISPLAY=:99`，RViz 經 localhost:6080 的瀏覽器桌面操作；修正紀錄見 [Docker 工作流程驗收](validation/2026-11-10-docker-workflow.md)。
+日常使用 `make up`／`make shell`；整合開發使用 `make dev`、`make dev-build`、`make dev-restart`。開發模式以 `docker/compose.dev.yaml` 將同一 sim 工作區設為可寫，使用容器內編譯的 overlay。完整目錄與操作見 [專案配置](PROJECT_LAYOUT.md)。Compose 的 local 設定讓所有 exec shell 使用宿主 DISPLAY 與私人 Xauthority，RViz 直接在本機桌面開視窗；修正紀錄見 [Docker 工作流程驗收](validation/2026-11-10-docker-workflow.md)。
+
+## 本機顯示器與每份 Compose
+
+預設 `make up`／`make dev`／`make vqa`／`make vqa-dev` 都直接開本機 RViz。Makefile 先執行 `scripts/prepare_gui.py`，只複製當前 DISPLAY 的授權到忽略的 `config/local/gui.Xauthority`，權限 0600；容器唯讀使用本機 X11 socket。從已登入桌面的終端機執行，無須放寬 xhost。Wayland 使用既有 XWayland。
+
+無視窗測試使用 `make up GUI=0`，或只用 `docker/compose.yaml`；不建立任何顯示伺服器。原有的虛擬桌面與網頁服務已移除，歷史驗收保留為當時快照。每份 Compose 的用途、完整組合命令與啟動順序見 [README 第 7 節](../README.md#7-檔案整理與驗收)。
 
 ## 目前的 Docker 目錄與相機入口
 
@@ -56,7 +62,7 @@ docker compose stop dev
 
 直接指定 service 會啟用對應 profile，無須額外 `--profile`；單純 `docker compose up` 只執行預設 smoke。[Compose profiles](https://docs.docker.com/compose/how-tos/profiles/)
 
-三個 service 都沒有設備映射、host network、GPU、privileged 或 Docker socket，並移除 capabilities。開發容器的 localhost ROS graph 只用於單容器程序；跨容器模擬與三機 discovery 應另建配置。獨立工具鏈沒有啟動桌面；整合 sim 已提供 Xvfb／noVNC，使用 make dev 或 make vqa-dev 開發與觀看 RViz。
+三個 service 都沒有設備映射、host network、GPU、privileged 或 Docker socket，並移除 capabilities。開發容器的 localhost ROS graph 只用於單容器程序；跨容器模擬與三機 discovery 應另建配置。獨立工具鏈沒有啟動桌面；整合 sim 直接使用本機顯示器，使用 make dev 或 make vqa-dev 開發與觀看 RViz。
 
 ## 映像與來源版本
 

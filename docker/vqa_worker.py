@@ -14,7 +14,9 @@ import numpy as np
 import torch
 from transformers import StoppingCriteriaList, LogitsProcessorList
 from light_foundation_vlm.checkpoint import load_bundle
-from lightweight_risk_vqa.robot_vqa import ROBOT_QUERY, robot_schema_error, StopAfterJsonObject, json_object_end
+from lightweight_risk_vqa.robot_vqa import (ROBOT_QUERY, robot_schema_error, StopAfterJsonObject,
+    json_object_end, PersonMotionHints, query_with_hints)
+from lightweight_risk_vqa.camera_policy import PersonBoxDetector
 from lightweight_risk_vqa.robot_decoding import RobotJsonDecoder
 
 
@@ -27,6 +29,8 @@ class Backend:
             raise ValueError('Temporal checkpoint required')
         self.model.to(self.device).eval()
         self.states = {}
+        self.detector = None
+        self.hints = {}
         self.worker_id = uuid.uuid4().hex
         sha = hashlib.sha256()
         with open(Path(checkpoint)/'model.pt','rb') as f:
@@ -54,6 +58,9 @@ class Backend:
     @torch.inference_mode()
     def infer(self,data):
         camera,stamp,epoch = data['camera_id'],float(data['stamp']),data['source_epoch']
+        mode = data.get('inference_mode','vqa-only')
+        if mode not in ('vqa-only','yolo-assisted'):
+            raise ValueError('Unknown inference mode')
         if camera not in ('chest','left_shoulder','right_shoulder','left_wrist'):
             raise ValueError('Unknown camera ID')
         frame = cv2.imdecode(np.frombuffer(base64.b64decode(data['jpeg'],validate=True),np.uint8),cv2.IMREAD_COLOR)
@@ -61,18 +68,32 @@ class Backend:
             raise ValueError('Invalid/oversized image')
         old = self.states.get(camera)
         state = None
-        if old and old[0] == epoch and 0 < stamp-old[1] <= self.manifest['config']['max_gap_s']:
+        continuity = bool(old and old[0] == epoch and old[3] == mode and 0 < stamp-old[1] <= self.manifest['config']['max_gap_s'])
+        if continuity:
             state = old[2]
         started = time.monotonic()
+        boxes,hints,detector_ms = [],None,None
+        query = self.query
+        if mode == 'yolo-assisted':
+            if self.detector is None:
+                self.detector = PersonBoxDetector(os.environ.get('YOLO_WEIGHTS','/models/yolov8n.pt'),str(self.device),416)
+            if not continuity:self.hints[camera] = PersonMotionHints()
+            detector_started = time.monotonic()
+            boxes = self.detector.detect(frame)
+            detector_ms = round((time.monotonic()-detector_started)*1000,3)
+            hints = self.hints[camera].update(boxes,stamp)
+            query = self.ids(query_with_hints(ROBOT_QUERY,hints))
+        vision_started = time.monotonic()
         attention = torch.ones_like(self.mask_query)
         output = self.model(self.preprocess(frame)[None,None].to(self.device),self.mask_query,
                             attention_mask=attention,frame_valid=torch.ones((1,1),dtype=torch.bool,device=self.device),
                             dt=torch.ones((1,1),device=self.device),state=state,
                             return_language_context=True,compute_masks=False)
-        self.states[camera] = (epoch,stamp,tuple(v.detach() for v in output['state']))
+        visual_ms = round((time.monotonic()-vision_started)*1000,3)
+        self.states[camera] = (epoch,stamp,tuple(v.detach() for v in output['state']),mode)
         count = output['visual_token_count']
-        text = self.model.language_model.get_input_embeddings()(self.query)
-        text = torch.where(self.query.eq(self.model.config.seg_token_id)[...,None],
+        text = self.model.language_model.get_input_embeddings()(query)
+        text = torch.where(query.eq(self.model.config.seg_token_id)[...,None],
                            self.model.seg_embedding.to(text),text)
         inputs = torch.cat([output['language_inputs'][:,:count],text],dim=1)
         attention = torch.ones(inputs.shape[:2],dtype=torch.long,device=self.device)
@@ -91,7 +112,10 @@ class Backend:
         result.update(raw=raw,raw_action=result.get('action',''),valid=not bool(error),
                       reason=error,model_id=self.model_id,prompt_id=self.prompt_id,worker_id=self.worker_id,
                       inference_ms=round((time.monotonic()-started)*1000,2),
-                      decoding='constrained',camera_id=camera,stamp=stamp)
+                      decoding='constrained',camera_id=camera,stamp=stamp,inference_mode=mode,
+                      yolo_hints=hints,metrics=dict(inference_mode=mode,segmentation_enabled=False,
+                          bbox_source='yolo' if mode=='yolo-assisted' else 'none',person_boxes=boxes,
+                          bbox_detector_ms=detector_ms,visual_memory_ms=visual_ms))
         if error:
             result['action'] = 'DATA_LOSS'
         return result

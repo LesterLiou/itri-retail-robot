@@ -1,6 +1,8 @@
 # ITRI 便利商店機器人整合系統
 
-ROS 2 Humble 整合 OpenArm、TidyBot、RealSense 與 VQA。使用、開發、編譯及測試都在 Docker；宿主機只需 Docker Engine／Compose V2、編輯器與瀏覽器，GPU 模式另需 NVIDIA Container Toolkit。
+ROS 2 Humble 整合 OpenArm、TidyBot、RealSense 與 VQA。使用、開發、編譯及測試都在 Docker；宿主機需 Docker Engine／Compose V2、Ubuntu 桌面與 xauth，GPU 模式另需 NVIDIA Container Toolkit。
+
+本機驗證 Compose 2.39.2；其他主機的 Compose 需支援本專案使用的 include／extends。
 
 **目前已實測 D435 RGB → ROS Image → 原有 ConvLSTM／Qwen 模型 → 決策與 RViz 影像。** Nav2／MoveIt 已完成假硬體任務。底盤與手臂仍為 fake hardware，預設禁動；真機運動、Thor、MASt3R 尺度與腕部融合仍待驗收。
 
@@ -21,7 +23,16 @@ make help
 | 真相機＋VQA 開發 | `make vqa-dev` | RealSense RGB／checkpoint | 是 |
 | 錄影回放＋真 VQA | `make vqa-video VIDEO=/data/video/0610_take3n4.mp4` | video／checkpoint | 否 |
 
-瀏覽器開啟 **[RViz2 桌面](http://localhost:6080/vnc.html?autoconnect=1&resize=scale)**。RViz 已自動開啟，不需要宿主 X11 或 `xhost`。`docker compose exec sim bash` 與 `make shell` 都能進入目前的容器，不會切換模式；shell 自動載入 ROS 與適用 overlay，`DISPLAY=:99`。
+**RViz 直接在本機 Ubuntu 桌面開啟視窗，程式仍在 Docker 執行。** 已移除虛擬桌面、VNC、網頁服務及其連接埠。在本機已登入的桌面終端機執行上述 make 指令，會自動準備目前 DISPLAY 的私人 Xauthority，再將本機 X11 socket 唯讀掛入容器。Wayland 桌面透過既有 XWayland 使用相同入口。
+
+`docker compose exec sim bash` 與 `make shell` 可直接進入目前容器，不切換模式。容器內的 `rviz2`、rqt 等 GUI 使用本機顯示器；整合 RViz 已自動啟動。要手動重開：
+
+```bash
+# 容器內；會新增一個本機 RViz 視窗
+rviz2 -d "$(ros2 pkg prefix retail_bringup)/share/retail_bringup/rviz/retail.rviz"
+```
+
+未登入桌面、SSH 或 CPU 自動測試時使用 `make up GUI=0`，只啟動 ROS、不開任何顯示伺服器。桌面重新登入後可執行 `make gui-setup` 更新授權，再重新啟動管線。授權檔在忽略的 config/local、權限 0600；不需執行 `xhost +`。
 
 上述模式共用同一個 sim service。切換模式或重新啟動前，先完成／取消正在進行的假硬體任務；切換後不重播舊 goal。`make up`／`make dev`／影片模式會先停止相機，避免同一 topic 有兩個擷取者。
 
@@ -37,7 +48,7 @@ flowchart LR
         TASK[任務管理與本地閘門]
         NAV[Nav2 + 假底盤]
         ARM[MoveIt + OpenArm fake hardware]
-        GUI[RViz + noVNC]
+        GUI[RViz2]
         AD --> TASK
         HAND --> TASK
         TASK --> NAV
@@ -46,15 +57,15 @@ flowchart LR
     end
     AD -->|"有界 HTTP 請求"| GPU["vqa-worker 容器\nMobileNetV3 + ConvLSTM + Qwen3"]
     GPU -->|"帶時間戳的模型建議／證據"| AD
-    GUI --> WEB["瀏覽器 localhost:6080"]
+    GUI --> SCREEN["本機 Ubuntu 顯示器"]
 ```
 
 | Service | 使用的 image／職責 | 掛載與權限 |
 |---|---|---|
-| `sim` | `humble-sim`；所有整合 ROS 節點、Nav2、MoveIt、假機器人與桌面 | 標準 `/workspace:ro`；開發 overlay 改為 rw；無相機／馬達設備 |
+| `sim` | `humble-sim`；所有整合 ROS 節點、Nav2、MoveIt、假機器人與本機 RViz | 標準 `/workspace:ro`；開發 overlay 改為 rw；無相機／馬達設備 |
 | `cameras` | 與 sim **同一 image、獨立程序**；只跑 RealSense driver | 指定 UVC 節點、USB、唯讀相機配置；無馬達設備 |
 | `vqa-worker` | 獨立 GPU image；保留模型原 Python／Torch 環境 | GPU、唯讀原始碼與 checkpoint；HTTP 8090 只在 Compose 網路內 |
-| `dev` | `humble-dev`；獨立 colcon／來源取得工具鏈 | 專案 rw；不啟動整合桌面，也不載入依賴 sim 的 overlay |
+| `dev` | `humble-dev`；獨立 colcon／來源取得工具鏈 | 專案 rw；不啟動整合節點；可使用本機 GUI，不載入依賴 sim 的 overlay |
 | `dev-check`／`ros-smoke` | 工具鏈／ROS 收發驗收 | CPU、無硬體；各自隔離 |
 | `camera-probe` | 一次性 RealSense 探測，`make camera-list` 使用 | 與相機相同的設備授權；執行完刪除 |
 | `mast3r-worker` | 選用重建 worker | 需另提供已驗證 runtime／模型，目前未驗收 |
@@ -204,7 +215,89 @@ ros2 topic echo /mission/state
 
 ## 7. 檔案整理與驗收
 
-Docker 的 Dockerfile、Compose overlays、worker、入口腳本都集中在 **`docker/`**。根目錄 `compose.yaml` 只 include 正式設定，保留 `docker compose exec sim bash` 等日常操作；`.dockerignore` 留在 build context 根目錄。套用 overlay 時使用 Makefile，或明確從根目錄指定：
+Docker 的 Dockerfile、Compose、worker、入口腳本集中在 **`docker/`**；`.dockerignore` 位於 build context 根目錄。每個 Compose 的用途如下，以下命令都在專案根目錄執行。
+
+| Compose 檔案 | 用途 | 日常入口 |
+|---|---|---|
+| 根 `compose.yaml` | include 共用服務＋本機顯示器；直接 docker compose 指令的入口 | `make gui-setup` 後 `docker compose up -d sim`；`docker compose exec sim bash` |
+| `docker/compose.yaml` | 共用映像、ROS、工具鏈、worker；sim 預設不開 GUI | `make up GUI=0`；CPU 驗收 |
+| `docker/compose.local.yaml` | 接本機 DISPLAY、Xauthority、X11 socket；自動開 RViz | make 預設加入；`make up` |
+| `docker/compose.dev.yaml` | 將 sim 專案掛載改為 rw、載入 colcon overlay | `make dev`、`make dev-build` |
+| `docker/compose.vqa.yaml` | HTTP 真模型＋MediaPipe＋外部 RGB；保留假機器人 | `make vqa`、`make vqa-dev`；影片用 `make vqa-video VIDEO=...` |
+| `docker/compose.realsense.yaml` | 相機專用設備授權與 probe，已由共用服務 extends | `make camera-list`、`make camera-logs`、`make camera-stop` |
+| `docker/compose.vqa-build.yaml` | GPU worker 的建置設定 | `make vqa-build` |
+| `docker/compose.mast3r.yaml` | 選用 MASt3R worker；必須提供已驗證 image／runtime／權重 | 準備資產後使用下方指令，尚未完成模型驗收 |
+
+### 直接使用每一份 Compose
+
+1. **共用服務／無視窗 CPU 模擬**：
+
+```bash
+docker compose --project-directory . -f docker/compose.yaml up -d sim
+# ROS 工具鏈獨立 shell、驗收：
+docker compose --project-directory . -f docker/compose.yaml run --rm dev
+docker compose --project-directory . -f docker/compose.yaml run --rm dev-check
+```
+
+2. **本機 RViz 視窗**：
+
+```bash
+make gui-setup
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.local.yaml up -d sim
+# 等同根目錄入口：docker compose up -d sim
+```
+
+3. **可寫開發環境＋本機 RViz**：
+
+```bash
+make gui-setup
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.local.yaml -f docker/compose.dev.yaml up -d sim
+docker compose exec sim bash
+# 容器內編譯方式見第 4 節；省略 local 那份則不開視窗
+```
+
+4. **真 VQA 與外部相機影像**：
+
+```bash
+make gui-setup
+docker compose up -d --wait --wait-timeout 120 vqa-worker
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.local.yaml -f docker/compose.vqa.yaml up -d sim
+```
+
+這時 sim 等待 `/cameras/chest/color/image_raw`，還要啟動下一步相機。日常直接 `make vqa` 會完成兩步。開發模式再疊 `docker/compose.dev.yaml`；`make vqa-dev` 會處理相機與 sim 的重啟順序。
+
+5. **RealSense 相機 driver／探測**：先確認 sim 已按上一項啟動，再執行：
+
+```bash
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.realsense.yaml --profile sim --profile camera \
+  up -d --no-deps cameras
+# 單獨探測，不需先啟動 sim：
+docker compose --project-directory . -f docker/compose.yaml \
+  --profile sim --profile camera run --rm --no-deps camera-probe
+```
+
+相機定義已由共用配置載入，顯式加入 realsense 檔用於查看／調整設備授權。`--no-deps` 避免啟動相機時覆寫已選擇的 sim 模式。替換 sim 容器前須先停止 cameras，再重新啟動。
+
+6. **建置 GPU VQA image**：
+
+```bash
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.vqa-build.yaml build vqa-worker
+```
+
+7. **選用 MASt3R worker**：先在 `.env` 設 `MAST3R_WORKER_IMAGE`、`MAST3R_RUNTIME_DIR`、`MAST3R_MODEL_DIR`，填入已驗證資產，再執行：
+
+```bash
+docker compose --project-directory . -f docker/compose.yaml \
+  -f docker/compose.mast3r.yaml up -d mast3r-worker
+# worker 可用後才設定 RECONSTRUCTION_URL=http://mast3r-worker:8091 接 adapter
+```
+
+檢查已選配置可將命令結尾換為 `config --quiet`，查看服務用 `ps`、日誌用 `logs -f <service>`。一般狀態檢查與進入目前容器：
 
 ```bash
 docker compose --project-directory . -f docker/compose.yaml \
@@ -224,4 +317,4 @@ docker compose run --rm dev-check
 make stop
 ```
 
-實測與限制：[RealSense＋VQA 驗收](docs/validation/2026-11-10-realsense-vqa.md)、[既有整合驗收](docs/validation/2026-11-10-integration.md)。其他文件：[實際目錄](docs/PROJECT_LAYOUT.md)、[系統設計](docs/SYSTEM_DESIGN.md)、[來源選集](docs/DEPENDENCIES.md)、[Docker 詳解](docs/DOCKER.md)、[開發規範](AGENTS.md)、[Codex 任務卡](CODEX_PROMPTS.md)。
+實測與限制：[本機 RViz 驗收](docs/validation/2026-11-10-native-display.md)、[RealSense＋VQA 驗收](docs/validation/2026-11-10-realsense-vqa.md)、[既有整合驗收](docs/validation/2026-11-10-integration.md)。其他文件：[實際目錄](docs/PROJECT_LAYOUT.md)、[系統設計](docs/SYSTEM_DESIGN.md)、[來源選集](docs/DEPENDENCIES.md)、[Docker 詳解](docs/DOCKER.md)、[開發規範](AGENTS.md)、[Codex 任務卡](CODEX_PROMPTS.md)。

@@ -11,7 +11,7 @@ from cv_bridge import CvBridge
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool,String
 from visualization_msgs.msg import Marker
 from retail_interfaces.msg import RiskAdvisory
 from .common import run, now, seconds, duration, text_marker
@@ -23,6 +23,9 @@ class VQAAdapter(Node):
         self.cameras = self.declare_parameter('cameras',['chest']).value
         self.backend = self.declare_parameter('backend','http').value
         self.input_source = self.declare_parameter('input_source','ros').value
+        self.inference_mode = self.declare_parameter('inference_mode','vqa-only').value
+        if self.inference_mode not in ('vqa-only','yolo-assisted'):
+            raise ValueError('Unknown VQA inference mode')
         if self.backend not in ('http','fixture'):
             raise ValueError('backend must be http or explicitly synthetic fixture')
         self.url = self.declare_parameter('worker_url','http://vqa-worker:8090/infer').value
@@ -35,6 +38,7 @@ class VQAAdapter(Node):
         self.obstacle_at = 0.0
         self.index = 0
         self.outputs = {c:self.create_publisher(RiskAdvisory,f'/perception/vqa/{c}',10) for c in self.cameras}
+        self.details = {c:self.create_publisher(String,f'/perception/vqa/{c}/details',10) for c in self.cameras}
         self.images = {c:self.create_publisher(Image,f'/perception/vqa/{c}/annotated',qos_profile_sensor_data) for c in self.cameras}
         self.markers = self.create_publisher(Marker,'/retail/status_markers',10)
         for c in self.cameras:
@@ -55,12 +59,12 @@ class VQAAdapter(Node):
         self.latest[camera] = msg  # Depth-one storage; never queue old frames.
 
     @staticmethod
-    def request(url,camera,msg,image,epoch):
+    def request(url,camera,msg,image,epoch,inference_mode='vqa-only'):
         ok,jpeg = cv2.imencode('.jpg',image,[cv2.IMWRITE_JPEG_QUALITY,95])
         if not ok:
             raise ValueError('JPEG encoding failed')
         payload = json.dumps({'camera_id':camera,'stamp':seconds(msg.header.stamp),
-                              'source_epoch':epoch,'jpeg':base64.b64encode(jpeg).decode()}).encode()
+                              'source_epoch':epoch,'inference_mode':inference_mode,'jpeg':base64.b64encode(jpeg).decode()}).encode()
         req = Request(url,data=payload,headers={'Content-Type':'application/json'})
         with urlopen(req,timeout=8.0) as response:
             result = json.loads(response.read(2_000_000))
@@ -94,6 +98,9 @@ class VQAAdapter(Node):
         if msg is None or not (0 <= now(self)-seconds(msg.header.stamp) <= 2.0):
             advisory.action, advisory.valid, advisory.reason = 'DATA_LOSS',False,'image/result expired'
         self.outputs[camera].publish(advisory)
+        details = dict(result,stamp=seconds(msg.header.stamp) if msg else 0.0,
+                       camera_id=camera,source_id=advisory.source_id)
+        self.details[camera].publish(String(data=json.dumps(details,allow_nan=False)))
         color = (0.1,0.9,0.3) if advisory.action in ('CONTINUE','NO_DETECT') else (1.0,0.3,0.1)
         self.markers.publish(text_marker(self,f'{camera}: {advisory.action} [{self.backend}]\n{advisory.observation[:75]}',
                                         self.cameras.index(camera),1.8+0.18*self.cameras.index(camera),color))
@@ -144,7 +151,7 @@ class VQAAdapter(Node):
                 self.processed[camera] = seconds(msg.header.stamp)
                 try:
                     image = self.bridge.imgmsg_to_cv2(msg,'bgr8')
-                    future = self.worker_pool.submit(self.request,self.url,camera,msg,image,self.epoch)
+                    future = self.worker_pool.submit(self.request,self.url,camera,msg,image,self.epoch,self.inference_mode)
                     self.pending = (camera,msg,future)
                 except Exception as exc:
                     self.publish(camera,msg,{'valid':False,'reason':str(exc)})

@@ -1,0 +1,28 @@
+# Native Ubuntu desktop / XWayland. No virtual display or browser service.
+x-display: &display
+  DISPLAY: ${DISPLAY:-}
+  XAUTHORITY: /workspace/config/local/gui.Xauthority
+  QT_X11_NO_MITSHM: "1"
+  LIBGL_ALWAYS_SOFTWARE: "1"
+
+services:
+  sim:
+    environment:
+      <<: *display
+      RVIZ_ENABLED: "1"
+    volumes:
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+        read_only: true
+        bind:
+          create_host_path: false
+  dev:
+    environment: *display
+    volumes:
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+        read_only: true
+        bind:
+          create_host_path: false

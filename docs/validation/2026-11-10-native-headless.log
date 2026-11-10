@@ -1,0 +1,2 @@
+PASS restart: IDLE, measured stow/standstill, disabled, no goal replay
+PASS: headless ROS startup, no RViz and no display server

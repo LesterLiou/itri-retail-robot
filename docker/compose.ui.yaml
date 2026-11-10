@@ -1,0 +1,22 @@
+# ROS-native port of the original yolo-assisted monitor, without segmentation.
+services:
+  vqa-worker:
+    image: itri-retail-robot:vqa-yolo
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.vqa-yolo
+      args:
+        VQA_BASE_IMAGE: ${VQA_WORKER_IMAGE:-itri-retail-robot:vqa-worker}
+    environment:
+      YOLO_WEIGHTS: /models/yolov8n.pt
+      YOLO_CONFIG_DIR: /tmp/retail-yolo
+    volumes:
+      - type: bind
+        source: ${YOLO_MODEL_FILE:?Set YOLO_MODEL_FILE to existing yolov8n.pt}
+        target: /models/yolov8n.pt
+        read_only: true
+        bind:
+          create_host_path: false
+  sim:
+    environment:
+      VQA_MODE: yolo-assisted

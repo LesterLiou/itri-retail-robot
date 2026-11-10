@@ -25,6 +25,19 @@ x-dev: &dev
   working_dir: /workspace/ros2_ws
 
 services:
+  model-tools:
+    <<: *dev
+    image: itri-retail-robot:model-tools
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: model-tools
+      args:
+        USER_UID: ${LOCAL_UID:-1000}
+        USER_GID: ${LOCAL_GID:-1000}
+    working_dir: /workspace
+    command: ["python3", "/workspace/scripts/convert_tidybot.py"]
   # Definitions stay in their own file, but remain known to every Compose entry.
   # The camera profile is inactive until explicitly selected.
   cameras:
@@ -95,20 +108,15 @@ services:
       CYCLONEDDS_URI: file:///opt/itri/cyclonedds-local.xml
       RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
       RETAIL_BAKED_ONLY: "1"
-      # docker exec does not inherit exports made by run_sim.bash.
-      # Keep every interactive shell on the same container-local desktop.
-      DISPLAY: ":99"
-      LIBGL_ALWAYS_SOFTWARE: "1"
-      QT_X11_NO_MITSHM: "1"
-      RVIZ_BROWSER: ${RVIZ_BROWSER:-1}
+      # Headless base; compose.local.yaml connects directly to the host desktop.
+      RVIZ_ENABLED: "0"
       VQA_BACKEND: ${VQA_BACKEND:-fixture}
+      VQA_MODE: ${VQA_MODE:-vqa-only}
       HAND_BACKEND: ${HAND_BACKEND:-fixture}
       VQA_CAMERAS: ${VQA_CAMERAS:-chest}
       CAMERA_SOURCE: ${CAMERA_SOURCE:-synthetic}
       VIDEO_PATH: ${VIDEO_PATH:-}
       RECONSTRUCTION_URL: ${RECONSTRUCTION_URL:-}
-    ports:
-      - "127.0.0.1:${RVIZ_PORT:-6080}:6080"
     volumes:
       - .:/workspace:ro
       - ${VIDEO_DIR:-./data/video}:/data/video:ro

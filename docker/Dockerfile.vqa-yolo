@@ -1,0 +1,6 @@
+ARG VQA_BASE_IMAGE=itri-retail-robot:vqa-worker
+FROM ${VQA_BASE_IMAGE}
+USER root
+# Match the original VLMotion runtime; retain its existing Torch/CUDA stack.
+RUN python3 -m pip install --no-cache-dir ultralytics==8.4.96 numpy==1.26.4 opencv-python==4.11.0.86
+USER 1001:1001
