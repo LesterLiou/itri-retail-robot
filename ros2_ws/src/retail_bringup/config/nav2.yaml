@@ -60,7 +60,8 @@ controller_server:
       trans_stopped_velocity: 0.02
       short_circuit_trajectory_evaluation: true
       stateful: true
-      critics: [RotateToGoal,Oscillation,BaseObstacle,GoalAlign,PathAlign,PathDist,GoalDist]
+      critics: [RotateToGoal,Oscillation,ObstacleFootprint,BaseObstacle,GoalAlign,PathAlign,PathDist,GoalDist]
+      ObstacleFootprint.scale: 0.02
       BaseObstacle.scale: 0.02
       PathAlign.scale: 16.0
       PathAlign.forward_point_distance: 0.1
@@ -131,7 +132,9 @@ global_costmap:
         map_subscribe_transient_local: true
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
-        inflation_radius: 0.5
+        # Cover the circumscribed radius of the 0.8 x 0.9 m rectangle so
+        # global paths do not hug corners that the footprint critic rejects.
+        inflation_radius: 0.65
         cost_scaling_factor: 3.0
       always_send_full_costmap: true
 

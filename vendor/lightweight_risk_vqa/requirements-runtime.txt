@@ -1,0 +1,4 @@
+# Install in the existing Torch/ROS container; do not replace its Torch/CUDA stack.
+# Explicit lap avoids Ultralytics silently auto-installing its tracker dependency.
+ultralytics==8.4.96
+lap==0.5.13

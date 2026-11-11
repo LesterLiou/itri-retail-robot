@@ -1,17 +1,19 @@
 """Only isolated fake hardware; physical bringup is deliberately a separate deployment."""
 import math
+import copy
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import yaml
 import xacro
 from ament_index_python.packages import get_package_share_directory as share
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument,OpaqueFunction,IncludeLaunchDescription,RegisterEventHandler,Shutdown
+from launch.actions import DeclareLaunchArgument,OpaqueFunction,IncludeLaunchDescription,RegisterEventHandler,Shutdown,ExecuteProcess
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from retail_core.world import load_world
 
 
 def robot_description(external_camera):
@@ -22,11 +24,22 @@ def robot_description(external_camera):
         for key in ('name','link'):
             if element.get(key)=='world':
                 element.set(key,'base_link')
-    base = next(e for e in root.findall('link') if e.get('name')=='base_link')
-    visual = ET.SubElement(base,'visual')
-    ET.SubElement(visual,'origin',xyz='0 0 0.12')
-    ET.SubElement(ET.SubElement(visual,'geometry'),'box',size='0.65 0.7 0.24')
-    ET.SubElement(ET.SubElement(visual,'material',name='platform_gray'),'color',rgba='0.22 0.28 0.33 1')
+    assembly=yaml.safe_load((Path(share('retail_description'))/'config/assembly.example.yaml').read_text())
+    offset=assembly['openarm_mount_offset']
+    for joint in root.findall('joint'):
+        parent,child=joint.find('parent'),joint.find('child')
+        if parent is not None and parent.get('link')=='base_link' and child.get('link','').startswith('openarm_'):
+            origin=joint.find('origin')
+            if origin is None:origin=ET.SubElement(joint,'origin')
+            xyz=list(map(float,origin.get('xyz','0 0 0').split()))
+            origin.set('xyz',' '.join(str(xyz[i]+offset[i]) for i in range(3)))
+    description = ET.parse(Path(share('retail_description'))/'urdf/tidybot.urdf').getroot()
+    chassis = copy.deepcopy(description.find('link'))
+    chassis.set('name','tidybot_chassis')
+    root.append(chassis)
+    mount = ET.SubElement(root,'joint',name='tidybot_chassis_mount',type='fixed')
+    ET.SubElement(mount,'parent',link='base_link')
+    ET.SubElement(mount,'child',link='tidybot_chassis')
 
     def fixed(parent,child,xyz,rpy='0 0 0'):
         ET.SubElement(root,'link',name=child)
@@ -55,6 +68,16 @@ def start(context):
     external_camera = value('camera_source')=='external'
     if value('camera_source') not in ('synthetic','video','external'):
         raise ValueError('camera_source must be synthetic, video or external')
+    world_file=value('world_file')
+    map_file=Path(value('map_yaml')) if value('map_yaml') else package/'maps/shop.yaml'
+    if world_file:
+        world=load_world(world_file)
+        expected=Path(world_file).parent/world['map_yaml']
+        if not value('map_yaml'):map_file=expected
+        if map_file.resolve()!=expected.resolve():raise ValueError('Map and fake scan world must reference the same geometry')
+    elif value('map_yaml'):
+        raise ValueError('Custom map in fake mode requires a matching world_file; never use mismatched scan geometry')
+    if not map_file.is_file():raise FileNotFoundError(map_file)
     robot = robot_description(external_camera)
     semantic = (upstream/'config/openarm_bimanual.srdf').read_text()
     kinematics = yaml.safe_load((upstream/'config/kinematics.yaml').read_text())
@@ -83,13 +106,12 @@ def start(context):
                         'left_gripper_controller','right_gripper_controller','-c','/hardware/controller_manager',
                         '--controller-manager-timeout','30'],output='screen'),
         Node(package='moveit_ros_move_group',executable='move_group',parameters=[moveit],output='screen'),
-        Node(package='retail_core',executable='fake_base',output='screen'),
+        Node(package='retail_core',executable='fake_base',parameters=[{'world_file':world_file}],output='screen'),
         Node(package='retail_core',executable='base_gate',output='screen',
              parameters=[{'required_cameras':value('cameras').split(','),'allow_synthetic':value('vqa_backend')=='fixture','stow_positions':[0.0]*14}]),
         Node(package='retail_core',executable='arm_gate',parameters=[{'allow_synthetic':True}],output='screen'),
         Node(package='retail_core',executable='scene_manager',parameters=[{'backend':value('scene_backend')}],output='screen'),
         Node(package='retail_core',executable='view_planner',output='screen'),
-        Node(package='retail_core',executable='mission_manager',output='screen'),
         IncludeLaunchDescription(PythonLaunchDescriptionSource(str(package/'launch/perception.launch.py')),launch_arguments={
             'vqa_backend':value('vqa_backend'),'hand_backend':value('hand_backend'),
             'vqa_mode':value('vqa_mode'),
@@ -97,6 +119,17 @@ def start(context):
             'input_source':value('camera_source'),
             'reconstruction_url':value('reconstruction_url')}.items()),
     ]
+    critical = nodes[:2]+nodes[3:9]
+    if value('manual')!='true':
+        mission = Node(package='retail_core',executable='mission_manager',output='screen')
+        nodes.append(mission)
+        critical.append(mission)
+    elif value('navigation')=='true':
+        raise RuntimeError('Manual MoveIt requires navigation:=false')
+    else:
+        watchdog=Node(package='retail_core',executable='manual_watchdog',output='screen')
+        nodes.append(watchdog)
+        critical.append(watchdog)
     if not external_camera:
         nodes.append(Node(package='retail_core',executable='camera_source',output='screen',
                           parameters=[{'video_path':value('video_path') if value('camera_source')=='video' else ''}]))
@@ -104,7 +137,7 @@ def start(context):
         params = str(package/'config/nav2.yaml')
         nodes.extend([
             Node(package='nav2_map_server',executable='map_server',name='map_server',
-                 parameters=[params,{'yaml_filename':str(package/'maps/shop.yaml')}],output='screen'),
+                 parameters=[params,{'yaml_filename':str(map_file)}],output='screen'),
             Node(package='nav2_planner',executable='planner_server',name='planner_server',parameters=[params],output='screen'),
             Node(package='nav2_controller',executable='controller_server',name='controller_server',
                  parameters=[params],remappings=[('cmd_vel','/navigation/cmd_vel')],output='screen'),
@@ -115,17 +148,17 @@ def start(context):
                  parameters=[{'autostart':True,'node_names':['map_server','planner_server','controller_server','bt_navigator']}],output='screen'),
         ])
     if value('rviz')=='true':
-        nodes.append(Node(package='rviz2',executable='rviz2',arguments=['-d',str(package/'rviz/retail.rviz')],
-                          parameters=[moveit],output='screen'))
+        # All automatic and manual viewer entry points share the same lock.
+        nodes.append(ExecuteProcess(cmd=['bash','-ec','exec python3 /opt/itri/open_rviz.py >>/tmp/retail-rviz.log 2>&1'],additional_env={'SIM_WORLD_FILE':world_file}))
     # Critical process exits stop the entire fake system; no implicit respawn or goal replay.
-    for node in nodes[:2]+nodes[3:10]:
+    for node in critical:
         nodes.append(RegisterEventHandler(OnProcessExit(target_action=node,on_exit=[Shutdown(reason='critical integration process exited')])) )
     return nodes
 
 
 def generate_launch_description():
-    defaults = {'rviz':'false','navigation':'true','vqa_backend':'fixture','hand_backend':'fixture','vqa_mode':'vqa-only',
+    defaults = {'rviz':'false','navigation':'true','manual':'false','vqa_backend':'fixture','hand_backend':'fixture','vqa_mode':'vqa-only',
                 'camera_source':'synthetic','scene_backend':'known_fixture','video_path':'','cameras':'chest',
-                'worker_url':'http://vqa-worker:8090/infer','reconstruction_url':''}
+                'worker_url':'http://vqa-worker:8090/infer','reconstruction_url':'','map_yaml':'','world_file':''}
     return LaunchDescription([*(DeclareLaunchArgument(k,default_value=v) for k,v in defaults.items()),OpaqueFunction(function=start)])
 

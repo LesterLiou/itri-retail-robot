@@ -1,0 +1,9 @@
+# Dimensioned 6.6 x 4.4 m floor plan; still isolated FAKE base/arms.
+services:
+  sim:
+    environment:
+      CONTROL_MODE: mission
+      NAV_MAP_FILE: /opt/retail_ws/install/retail_bringup/share/retail_bringup/maps/store_corridor.yaml
+      SIM_WORLD_FILE: /opt/retail_ws/install/retail_bringup/share/retail_bringup/maps/store_corridor.geometry.yaml
+      # A 2D map does not certify a 3D shelf manipulation scene.
+      SCENE_BACKEND: external

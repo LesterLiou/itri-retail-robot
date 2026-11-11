@@ -44,7 +44,14 @@ class VQAAdapter(Node):
         for c in self.cameras:
             self.create_subscription(Image,f'/cameras/{c}/color/image_raw',lambda msg,c=c:self.receive(c,msg),qos_profile_sensor_data)
         self.create_subscription(Bool,'/demo/obstacle',self.fixture_state,10)
+        # Wake the ROS executor on completion instead of adding up to one timer
+        # period to every inference cycle. Evidence TTL and capture stamps stay fixed.
+        self.completion = self.create_guard_condition(self.tick)
         self.create_timer(0.1,self.tick)
+
+    def inference_ready(self,future):
+        try:self.completion.trigger()
+        except Exception:pass  # A completed HTTP request may outlive ROS shutdown.
 
     def fixture_state(self,msg):
         self.obstacle, self.obstacle_at = msg.data,time.monotonic()
@@ -153,6 +160,7 @@ class VQAAdapter(Node):
                     image = self.bridge.imgmsg_to_cv2(msg,'bgr8')
                     future = self.worker_pool.submit(self.request,self.url,camera,msg,image,self.epoch,self.inference_mode)
                     self.pending = (camera,msg,future)
+                    future.add_done_callback(self.inference_ready)
                 except Exception as exc:
                     self.publish(camera,msg,{'valid':False,'reason':str(exc)})
                 break

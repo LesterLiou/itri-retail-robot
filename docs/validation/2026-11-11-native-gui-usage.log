@@ -1,0 +1,6 @@
+PASS ROS VQA UI: {"source": "external", "action": "CONTINUE", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "mode": "yolo-assisted", "capture_stamp": 1794366536.3847754, "people": 1, "inference_ms": 1021.1}
+RViz process count: 1
+        0x7c00006 "Light Foundation ConvLSTM + VQA — ROS 2 Monitor": ()  1500x920+10+45  +2027+101
+        0x7600014 "/opt/retail_ws/install/retail_bringup/share/retail_bringup/rviz/retail.rviz* - RViz": ("rviz2" "rviz2")  3370x1376+0+37  +1990+64
+data: '{"mission_id": "", "phase": "HOLD", "reason": "reset refused: chest: invalid source/feedback/interlock", "scene_revision": 0, "r...'
+---

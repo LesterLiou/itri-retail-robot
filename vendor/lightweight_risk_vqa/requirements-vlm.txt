@@ -1,0 +1,8 @@
+# Reuse a matching Torch/torchvision CUDA installation; pip extras: .[vlm,gui,data]
+transformers>=4.51,<6
+Pillow>=10,<13
+numpy>=1.26,<3
+requests>=2.31,<3
+PyQt5>=5.15,<6
+opencv-python-headless>=4.8,<5
+pycocotools==2.0.11

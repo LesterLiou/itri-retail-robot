@@ -1,0 +1,2 @@
+PASS: single composed URDF tree, TidyBot chassis + OpenArm, no Kinova, current state collision-free; links= 31
+PASS ROS VQA UI: {"source": "external", "action": "CONTINUE", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "mode": "yolo-assisted", "capture_stamp": 1794325038.6241307, "people": 0, "inference_ms": 943.28}

@@ -1,0 +1,19 @@
+{
+  "sentence_safe_hf": {
+    "valid": 11,
+    "count": 11,
+    "errors": {},
+    "median_ms": 825.19,
+    "max_ms": 1638.77
+  },
+  "sentence_safe_cached": {
+    "valid": 11,
+    "count": 11,
+    "errors": {},
+    "median_ms": 268.85,
+    "max_ms": 440.91
+  },
+  "action_changes": [],
+  "raw_exact_matches": 9,
+  "decision_fields_exact_matches": 11
+}

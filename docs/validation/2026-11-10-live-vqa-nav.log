@@ -1,0 +1,4 @@
+PASS ROS VQA UI: {"source": "external", "action": "OBSERVE", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "mode": "yolo-assisted", "capture_stamp": 1794324383.920261, "people": 1, "inference_ms": 889.8}
+Explicit test reset of stopped FAKE base, followed by one fresh map goal; no model output is altered
+Live camera/VQA navigation observation: {"navigation_outcome": "HOLD", "moved_metres": 0.0884, "motion_permitted": true, "nonzero_odometry": true, "actions": ["CONTINUE", "DANGER_WARNING", "DATA_LOSS"], "reason": "navigation interlock lost; goal cancelled", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "synthetic": false}
+PASS: actual VQA permitted measured fake-base motion; terminal outcome above is reported without forcing clear

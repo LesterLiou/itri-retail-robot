@@ -4,6 +4,8 @@ setup(name='retail_core', version='0.1.0', packages=['retail_core'],
       install_requires=['setuptools'], zip_safe=True, maintainer='ITRI', maintainer_email='dev@example.invalid', description='Integration adapters', license='Apache-2.0',
       entry_points={'console_scripts':[
           'vqa_ui = retail_core.vqa_ui:main',
+          'manual_control = retail_core.manual_control:main',
+          'manual_watchdog = retail_core.manual_watchdog:main',
           'camera_source = retail_core.camera:main',
           'vqa_adapter = retail_core.vqa:main',
           'base_gate = retail_core.gate:main',

@@ -1,0 +1,3 @@
+PASS: single composed URDF tree, TidyBot chassis + OpenArm, no Kinova, current state collision-free; links= 35
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-developer'
+PASS: actual Qt Arm/End buttons launched the existing manual lease owner, opened a fresh window, cancelled it, and observed stopped FAKE feedback / HOLD

@@ -1,0 +1,67 @@
+# Interface contract only. No Isaac process or bridge is launched by this file.
+contract_version: 1
+runtime_enabled: false
+scope: tidybot_base_first
+frames:
+  global: map
+  odometry: odom
+  base: base_link
+  odom_to_base_owner: isaac_bridge_only
+  map_to_odom_owner: selected_localization_or_aligned_ground_truth_only
+  robot_link_tf_owner: robot_state_publisher_only
+clock:
+  current_rviz_test: system_time
+  future_isaac: require_validated_common_clock_or_timestamp_mapping
+  preserve_original_camera_capture_stamp: true
+  reject_unmapped_wall_vs_sim_time: true
+commands:
+  velocity:
+    topic: /isaac/tidybot/cmd_vel
+    type: geometry_msgs/msg/Twist
+    direction: integration_to_isaac
+    frame: base_link
+    components: [linear.x, linear.y, angular.z]
+    source: base_gate_unique_final_output_via_future_adapter
+  enable:
+    topic: /isaac/tidybot/enable
+    type: std_msgs/msg/Bool
+    direction: integration_to_isaac
+    requires_fresh_gate_state: true
+    latched_true_is_not_a_lease: true
+  control_frame:
+    topic: /isaac/tidybot/control_frame
+    type: std_msgs/msg/String
+    value: local
+feedback:
+  odometry:
+    topic: /isaac/tidybot/odom
+    type: nav_msgs/msg/Odometry
+    canonical_topic: /odom
+    parent_frame: odom
+    child_frame: base_link
+  scan:
+    topic: /isaac/tidybot/scan
+    type: sensor_msgs/msg/LaserScan
+    canonical_topic: /scan
+    provenance: simulated_sensor_from_isaac_world
+  joint_states:
+    topic: /isaac/robot/joint_states
+    type: sensor_msgs/msg/JointState
+    canonical_topic: /joint_states
+    joint_names: must_match_composed_openarm_urdf
+    phase: later_arm_integration
+existing_gate_timeouts_seconds:
+  command_receipt: 0.25
+  odometry_and_joint_feedback: 0.5
+  vqa_capture_evidence_maximum: 2.0
+startup:
+  disable_fake_base_when_isaac_owns_odometry: true
+  forbid_duplicate_odom_scan_or_tf_publishers: true
+  require_metric_map_world_alignment: true
+  require_measured_feedback_before_motion: true
+reset:
+  cancel_old_nav_and_arm_goals: true
+  revoke_motion_permissions: true
+  new_source_epoch_required: true
+  fresh_stop_and_stow_feedback_required: true
+  explicit_reset_and_new_goal_required: true

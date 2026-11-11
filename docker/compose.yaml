@@ -112,6 +112,10 @@ services:
       RVIZ_ENABLED: "0"
       VQA_BACKEND: ${VQA_BACKEND:-fixture}
       VQA_MODE: ${VQA_MODE:-vqa-only}
+      CONTROL_MODE: ${CONTROL_MODE:-mission}
+      NAV_MAP_FILE: ${NAV_MAP_FILE:-}
+      SIM_WORLD_FILE: ${SIM_WORLD_FILE:-}
+      SCENE_BACKEND: ${SCENE_BACKEND:-known_fixture}
       HAND_BACKEND: ${HAND_BACKEND:-fixture}
       VQA_CAMERAS: ${VQA_CAMERAS:-chest}
       CAMERA_SOURCE: ${CAMERA_SOURCE:-synthetic}
@@ -134,6 +138,9 @@ services:
       PYTHONPATH: /upstream/vqa
       VQA_CHECKPOINT: /models/vqa
       VQA_DEVICE: cuda:0
+      VQA_PROMPT_FILE: /config/vqa/prompt_training_compatible.txt
+      VQA_DECODING_PROFILE: ${VQA_DECODING_PROFILE:-baseline}
+      VQA_GENERATION_ENGINE: ${VQA_GENERATION_ENGINE:-hf}
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
@@ -145,14 +152,15 @@ services:
       retries: 6
     volumes:
       - ./docker/vqa_worker.py:/app/vqa_worker.py:ro
+      - ./config/vqa:/config/vqa:ro
       - type: bind
-        source: ${VQA_SOURCE_DIR:-./external/VLMotion_VQA/ros2_ws/src/lightweight_risk_vqa}
+        source: ${VQA_SOURCE_DIR:-./vendor/lightweight_risk_vqa}
         target: /upstream/vqa
         read_only: true
         bind:
           create_host_path: false
       - type: bind
-        source: ${VQA_CHECKPOINT_DIR:-./models/vqa}
+        source: ${VQA_CHECKPOINT_DIR:-./models/vqa/best}
         target: /models/vqa
         read_only: true
         bind:

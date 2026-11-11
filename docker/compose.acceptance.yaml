@@ -1,0 +1,11 @@
+# One-off fake-hardware acceptance only; never attach cameras or a GPU worker.
+services:
+  sim:
+    network_mode: none
+    environment:
+      ROS_DOMAIN_ID: "84"
+      RVIZ_ENABLED: "0"
+      CAMERA_SOURCE: synthetic
+      VQA_BACKEND: fixture
+      HAND_BACKEND: fixture
+      CONTROL_MODE: mission

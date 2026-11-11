@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Extract the supplied chassis CAD only; never import its separate Kinova arm."""
 import hashlib
+import argparse
 import json
 import math
 from pathlib import Path
@@ -9,7 +10,13 @@ import xml.etree.ElementTree as ET
 from pxr import Usd, UsdGeom
 
 root=Path('/workspace')
-source=root/'tidybot_isaac_local_2'
+parser=argparse.ArgumentParser()
+parser.add_argument('--source',type=Path,default=root/'external/tidybot_isaac_local_2')
+source=parser.parse_args().source.resolve()
+if not source.is_relative_to(root):
+    raise ValueError('Mount source beneath /workspace for reproducible source provenance')
+if not (source/'payloads/base.usda').is_file():
+    raise FileNotFoundError(f'USD source missing: {source}; restore the supplied source or pass --source')
 stage=Usd.Stage.Open(str(source/'payloads/base.usda'))
 assert stage and stage.GetMetadata('metersPerUnit')==1 and str(stage.GetMetadata('upAxis'))=='Z'
 path='/tidybot/Geometry/world/joint_x_jointbody/joint_y_jointbody/joint_th_jointbody/base/Kinova/Kinova'
@@ -53,7 +60,7 @@ ET.SubElement(collision,'origin',xyz=f'0 0 {size[2]/2}')
 ET.SubElement(ET.SubElement(collision,'geometry'),'box',size=' '.join(map(str,size)))
 ET.indent(robot)
 (package/'urdf/tidybot.urdf').write_text(ET.tostring(robot,encoding='unicode')+'\n')
-report=dict(source='tidybot_isaac_local_2/payloads/base.usda',prim=path,
+report=dict(source=str((source/'payloads/base.usda').relative_to(root)),prim=path,
     units='metres',source_minimum=minimum,source_maximum=maximum,size=size,
     visual_alignment_translation=offset,triangles=len(triangles),
     note='Chassis only; Kinova articulation excluded. Alignment is a display baseline, not measured OpenArm mounting calibration.',

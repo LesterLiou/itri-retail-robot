@@ -1,6 +1,7 @@
 """One explicit task owner; all arm execution goes through MoveIt."""
 from collections import deque
 import json
+import copy
 import math
 import time
 import uuid
@@ -11,7 +12,7 @@ from rclpy.action import ActionClient
 from rclpy.qos import qos_profile_sensor_data
 from std_srvs.srv import Trigger,SetBool
 from std_msgs.msg import String
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import Pose,PoseStamped
 from nav2_msgs.action import NavigateToPose
 from sensor_msgs.msg import JointState
 from moveit_msgs.action import MoveGroup
@@ -22,6 +23,7 @@ from retail_interfaces.msg import GateState,SceneState,ObstacleState
 from visualization_msgs.msg import Marker
 from lifecycle_msgs.srv import GetState
 from .common import run,now,seconds,text_marker
+from .navigation import validate_goal
 
 
 class MissionManager(Node):
@@ -38,6 +40,11 @@ class MissionManager(Node):
         self.minimum_revision = 0
         self.wait_started = 0.0
         self.arm_active = False
+        self.request_stamp=None
+        self.target=None
+        self.last_goal_rejection=None
+        self.started_at=now(self)
+        self.recent_goal_stamps=deque(maxlen=128)
         self.nav_ready,self.nav_query,self.nav_queried_at = False,None,0.0
         self.nav_lifecycle = self.create_client(GetState,'/bt_navigator/get_state')
         self.create_subscription(GateState,'/base/gate_state',lambda m:setattr(self,'gate',m),10)
@@ -45,6 +52,7 @@ class MissionManager(Node):
         self.create_subscription(ObstacleState,'/perception/hand/state',lambda m:setattr(self,'hand',m),10)
         self.create_subscription(JointState,'/joint_states',lambda m:setattr(self,'joints',m),qos_profile_sensor_data)
         self.create_subscription(JointState,'/views/selected_joints',lambda m:setattr(self,'view',m),10)
+        self.create_subscription(PoseStamped,'/mission/goal_pose',self.goal_pose,10)
         self.nav = ActionClient(self,NavigateToPose,'/navigate_to_pose')
         self.move = ActionClient(self,MoveGroup,'/move_action')
         self.fk = self.create_client(GetPositionFK,'/compute_fk')
@@ -67,23 +75,41 @@ class MissionManager(Node):
 
     def publish_state(self):
         self.state.publish(String(data=json.dumps(dict(mission_id=self.mission_id,phase=self.phase,
-                               reason=self.reason,scene_revision=self.bound_revision,runtime=self.runtime))))
+                               reason=self.reason,scene_revision=self.bound_revision,runtime=self.runtime,
+                               request_stamp=self.request_stamp,target=self.target,last_goal_rejection=self.last_goal_rejection))))
         self.markers.publish(text_marker(self,f'MISSION: {self.phase}\n{self.reason[:75]}',50,3.05))
 
-    def start(self,command,req,res):
+    def goal_pose(self,msg):
+        try:
+            validate_goal(msg,now(self))
+            stamp=seconds(msg.header.stamp)
+            if stamp<self.started_at:raise ValueError('Goal predates this task-manager instance')
+            if any(abs(stamp-old)<1e-6 for old in self.recent_goal_stamps):raise ValueError('Duplicate goal; a fresh user request is required')
+            response=self.start('navigate',Trigger.Request(),Trigger.Response(),target=msg)
+            if not response.success:raise ValueError(response.message)
+            self.recent_goal_stamps.append(stamp)
+        except ValueError as exc:
+            self.last_goal_rejection=dict(stamp=seconds(msg.header.stamp),reason=str(exc))
+            self.get_logger().warning('Goal rejected: '+str(exc))
+
+    def start(self,command,req,res,target=None):
         if self.phase not in ('IDLE','DONE'):
             res.success,res.message = False,'task active/held; cancel or explicitly reset'
             return res
         self.mission_id = uuid.uuid4().hex
         self.generation += 1
         self.reason,self.handles,self.view = '',[],None
+        self.request_stamp=seconds(target.header.stamp) if target is not None else None
+        self.target=dict(x=target.pose.position.x,y=target.pose.position.y,
+                         yaw=2*math.atan2(target.pose.orientation.z,target.pose.orientation.w)) if target is not None else None
+        self.last_goal_rejection=None
         self.queue.clear()
         if command != 'place':
             self.queue.extend([
                 ('wait','WAIT_NAV_READY','nav_ready'),
                 ('service','SELECT_NAV','/base_gate/select_navigation',None),
                 ('service','ENABLE_NAV','/base_gate/enable',True),
-                ('nav','NAVIGATE',(1.6,0.0)),
+                ('nav','NAVIGATE',copy.deepcopy(target) if target is not None else (1.6,0.0)),
             ])
             if command == 'run':
                 # This is a fixed-pose fake docking baseline, not ArUco docking.
@@ -330,10 +356,12 @@ class MissionManager(Node):
         elif kind == 'nav':
             if not self.nav.server_is_ready(): return
             goal = NavigateToPose.Goal()
-            goal.pose.header.frame_id = 'map'
+            if isinstance(step[2],PoseStamped):goal.pose=copy.deepcopy(step[2])
+            else:
+                goal.pose.header.frame_id = 'map'
+                goal.pose.pose.position.x,goal.pose.pose.position.y = step[2]
+                goal.pose.pose.orientation.w = 1.0
             goal.pose.header.stamp = self.get_clock().now().to_msg()
-            goal.pose.pose.position.x,goal.pose.pose.position.y = step[2]
-            goal.pose.pose.orientation.w = 1.0
             self.pending = ('nav_accept',self.guarded_acceptance(self.nav.send_goal_async(goal)))
         elif kind == 'move':
             if not self.move.server_is_ready(): return

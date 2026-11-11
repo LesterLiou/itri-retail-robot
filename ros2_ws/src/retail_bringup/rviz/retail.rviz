@@ -1,6 +1,8 @@
 Panels:
 - Class: rviz_common/Displays
   Name: Displays
+- Class: retail_rviz_plugins/TaskControls
+  Name: Retail Task Controls
 Visualization Manager:
   Class: ''
   Global Options:
@@ -82,7 +84,7 @@ Visualization Manager:
   - Class: rviz_default_plugins/MoveCamera
   - Class: rviz_default_plugins/Select
   - Class: rviz_default_plugins/SetGoal
-    Topic: /goal_pose
+    Topic: /mission/goal_pose
   Views:
     Current:
       Class: rviz_default_plugins/Orbit

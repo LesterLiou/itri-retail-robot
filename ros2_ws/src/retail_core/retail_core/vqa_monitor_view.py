@@ -122,6 +122,21 @@ class Monitor(QMainWindow):
         self.people = card('PEOPLE DETECTED')
         self.latency = card('MODEL LATENCY')
         layout.addLayout(cards)
+        self.history = QLabel('Last valid decision: waiting')
+        self.history.setWordWrap(True)
+        self.history.setStyleSheet('font-size:14px;padding:5px;background:#fff2ce;color:#503800')
+        layout.addWidget(self.history)
+        self.health = QLabel('DATA HEALTH: waiting')
+        self.health.setWordWrap(True)
+        self.health.setStyleSheet('font-size:13px;padding:4px')
+        layout.addWidget(self.health)
+        choices=QHBoxLayout()
+        self.action_choices={}
+        for action in ('STOP','DANGER_WARNING','CONTINUE','OBSERVE'):
+            label=QLabel(action+'\n—')
+            label.setAlignment(Qt.AlignCenter);label.setMinimumWidth(120)
+            choices.addWidget(label,1);self.action_choices[action]=label
+        layout.addLayout(choices)
         self.answer_summary = QLabel('Waiting for a valid VQA result...')
         self.answer_summary.setTextFormat(Qt.PlainText)
         self.answer_summary.setWordWrap(True)
@@ -217,6 +232,24 @@ class Monitor(QMainWindow):
                  'DANGER_WARNING': '#e08a00', 'STOP': '#c62828'}.get(decision['action'], '#606b78')
         text = ('DATA LOSS — UNABLE TO ASSESS' if decision['action'] == 'DATA_LOSS'
                 else decision['action'])
+        history=state.get('last_valid')
+        if history:
+            self.history.setText(f"Last valid: {history['action']} · {history['age_sec']:.1f}s ago · HISTORY ONLY, no motion permission"+
+                ('' if history['same_source'] else ' · previous source'))
+            if decision['action']=='DATA_LOSS':
+                text=f"LAST VALID: {history['action']} (history only)\nCURRENT: DATA_LOSS — motion denied"
+        valid=bool(decision.get('data_available'))
+        age=state.get('capture_age_sec',float('inf'))
+        age_text=f'{age:.2f}s' if math.isfinite(age) else 'unavailable'
+        self.health.setText(f"DATA HEALTH: {'VALID' if valid else 'DATA_LOSS'} · capture age {age_text} · {state.get('health_reason','')} · confidence percentages unavailable")
+        self.health.setStyleSheet('font-size:13px;padding:4px;color:'+('#126b35' if valid else '#9d3518'))
+        for action,label in self.action_choices.items():
+            current=valid and decision['action']==action
+            retained=not valid and history and history['action']==action
+            tag='MODEL SELECTED' if current else ('HISTORY ONLY' if retained else '—')
+            background=({'STOP':'#c62828','DANGER_WARNING':'#c17a00','CONTINUE':'#198754','OBSERVE':'#1473a8'}[action] if current else ('#fff2ce' if retained else '#edf2f6'))
+            label.setText(action+'\n'+tag)
+            label.setStyleSheet(f'background:{background};color:'+('white' if current else '#384654')+';font-size:13px;padding:6px;border-radius:5px')
         self.decision.setText(text)
         self.decision.setStyleSheet(f'background:{color};color:white;font-size:20px;padding:8px')
         if state['frame'] is not None:

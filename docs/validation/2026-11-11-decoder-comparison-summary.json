@@ -1,0 +1,17 @@
+{
+  "baseline": {
+    "valid": 11,
+    "count": 11,
+    "errors": {},
+    "median_ms": 799.68,
+    "max_ms": 1950.3
+  },
+  "sentence_safe": {
+    "valid": 11,
+    "count": 11,
+    "errors": {},
+    "median_ms": 709.76,
+    "max_ms": 863.24
+  },
+  "action_changes": []
+}

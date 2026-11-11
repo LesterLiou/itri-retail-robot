@@ -1,0 +1,4 @@
+# Fake assembly only: CAD chassis is 0.316 m tall; 0.024 m adapter clearance.
+# Replace with measured mounting extrinsics before any physical deployment.
+calibrated: false
+openarm_mount_offset: [0.0, 0.0, 0.34]

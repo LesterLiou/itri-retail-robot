@@ -1,0 +1,20 @@
+{
+  "seconds": 45.0,
+  "unique_model_results": 86,
+  "model_actions": {
+    "CONTINUE": 20,
+    "DANGER_WARNING": 66
+  },
+  "json_errors": 0,
+  "non_ascii_outputs": 0,
+  "schema_errors": {
+    "robot VQA LOW risk contradicts insufficient motion evidence in explanation": 1
+  },
+  "sampled_health": {
+    "waiting": 4,
+    "valid": 882,
+    "robot VQA LOW risk contradicts insufficient motion evidence in explanation": 14
+  },
+  "inference_ms_median": 424.375,
+  "inference_ms_max": 799.99
+}

@@ -1,0 +1,95 @@
+Panels:
+- Class: rviz_common/Displays
+  Name: Displays
+- Class: retail_rviz_plugins/TaskControls
+  Name: Retail Task Controls
+Visualization Manager:
+  Class: ''
+  Global Options:
+    Fixed Frame: map
+    Background Color: 30; 35; 43
+    Frame Rate: 15
+  Displays:
+  - Class: rviz_default_plugins/Map
+    Name: Navigation Map
+    Enabled: true
+    Topic:
+      Value: /map
+      Durability Policy: Transient Local
+    Alpha: 1
+    Draw Behind: true
+  - Class: rviz_default_plugins/Grid
+    Name: Metre Grid
+    Enabled: true
+    Cell Size: 0.5
+    Plane Cell Count: 16
+    Alpha: 0.2
+  - Class: rviz_default_plugins/RobotModel
+    Name: TidyBot and OpenArm
+    Enabled: true
+    Description Source: Topic
+    Description Topic:
+      Value: /robot_description
+      Durability Policy: Transient Local
+    Visual Enabled: true
+    Collision Enabled: false
+  - Class: rviz_default_plugins/Path
+    Name: Nav2 Global Plan
+    Enabled: true
+    Topic:
+      Value: /plan
+    Line Style: Lines
+    Line Width: 0.04
+    Color: 30; 180; 60
+  - Class: rviz_default_plugins/LaserScan
+    Name: Simulated Laser
+    Enabled: true
+    Topic:
+      Value: /scan
+      Reliability Policy: Best Effort
+    Size (Pixels): 3
+    Style: Points
+    Color Transformer: FlatColor
+    Color: 230; 50; 40
+  - Class: rviz_default_plugins/Map
+    Name: Nav2 Global Costmap (optional)
+    Enabled: false
+    Topic:
+      Value: /global_costmap/costmap
+      Durability Policy: Transient Local
+    Color Scheme: costmap
+    Alpha: 0.45
+  - Class: moveit_rviz_plugin/MotionPlanning
+    Name: MoveIt Motion Planning
+    Enabled: true
+    Robot Description: robot_description
+    Planning Scene Topic: /monitored_planning_scene
+    Planning Request:
+      Planning Group: right_arm
+      Query Goal State: true
+      Query Start State: false
+      Interactive Marker Size: 0.2
+    Scene Robot:
+      Robot Visual Enabled: false
+      Robot Collision Enabled: false
+    Planned Path:
+      Trajectory Topic: /display_planned_path
+      Loop Animation: false
+      State Display Time: 0.05 s
+  Tools:
+  - Class: rviz_default_plugins/Interact
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/Select
+  - Class: rviz_default_plugins/SetGoal
+    Topic: /mission/goal_pose
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Scale: 90
+      Angle: 0
+      X: 1
+      Y: 0
+      Target Frame: map
+Window Geometry:
+  Width: 1400
+  Height: 950

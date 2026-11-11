@@ -1,0 +1,5 @@
+string owner_id
+bool acquire
+---
+bool success
+string message

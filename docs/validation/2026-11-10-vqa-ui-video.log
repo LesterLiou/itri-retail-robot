@@ -1,0 +1,1 @@
+PASS ROS VQA UI: {"source": "video", "action": "CONTINUE", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "mode": "yolo-assisted", "capture_stamp": 1794323196.7101305, "people": 2, "inference_ms": 1160.35}

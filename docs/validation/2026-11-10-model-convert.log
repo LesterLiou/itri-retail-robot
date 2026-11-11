@@ -1,0 +1,27 @@
+{
+  "source": "external/tidybot_isaac_local_2/payloads/base.usda",
+  "prim": "/tidybot/Geometry/world/joint_x_jointbody/joint_y_jointbody/joint_th_jointbody/base/Kinova/Kinova",
+  "units": "metres",
+  "source_minimum": [
+    -0.2739524089157581,
+    -0.2540004968833923,
+    0.1537989415973425
+  ],
+  "source_maximum": [
+    0.2740475877761841,
+    0.25399951932907106,
+    0.4697989356517792
+  ],
+  "size": [
+    0.5479999966919422,
+    0.5080000162124634,
+    0.3159999940544367
+  ],
+  "visual_alignment_translation": [
+    -4.758943021299089e-05,
+    4.88777160634335e-07,
+    -0.1537989415973425
+  ],
+  "triangles": 62144,
+  "note": "Chassis only; Kinova articulation excluded. Alignment is a display baseline, not measured OpenArm mounting calibration."
+}

@@ -1,0 +1,3 @@
+目前是導航／任務模式，不能手動控制手臂。請在宿主機取消任務後執行 make stop、make moveit，再開新的 make shell。
+[ros2run]: Process exited with failure 2
+PASS: mission profile refuses manual takeover with a clear mode-switch message

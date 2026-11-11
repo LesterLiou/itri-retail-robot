@@ -1,0 +1,5 @@
+<library path="retail_controls">
+  <class name="retail_rviz_plugins/TaskControls" type="retail_rviz_plugins::TaskControls" base_class_type="rviz_common::Panel">
+    <description>Task-managed Nav2 controls and exclusive manual MoveIt execution window.</description>
+  </class>
+</library>

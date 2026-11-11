@@ -1,0 +1,23 @@
+{
+  "seconds": 45.0,
+  "unique_model_results": 50,
+  "model_actions": {
+    "DANGER_WARNING": 31,
+    "OBSERVE": 12,
+    "CONTINUE": 7
+  },
+  "json_errors": 0,
+  "non_ascii_outputs": 0,
+  "schema_errors": {
+    "robot VQA copied JSON fields inside observation": 3,
+    "robot VQA LOW risk contradicts insufficient motion evidence in explanation": 1
+  },
+  "sampled_health": {
+    "waiting": 1,
+    "valid": 796,
+    "capture expired before next adapter tick": 8,
+    "image/result expired": 35,
+    "robot VQA copied JSON fields inside observation": 42,
+    "robot VQA LOW risk contradicts insufficient motion evidence in explanation": 18
+  }
+}

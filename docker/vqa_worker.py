@@ -20,6 +20,34 @@ from lightweight_risk_vqa.camera_policy import PersonBoxDetector
 from lightweight_risk_vqa.robot_decoding import RobotJsonDecoder
 
 
+@torch.inference_mode()
+def generate_grammar_cached(language_model,inputs,attention,max_tokens,processor):
+    """Batch grammar-forced runs into KV-cache updates; do not alter free logits."""
+    if inputs.shape[0]!=1:raise ValueError('Grammar cached decoding supports batch one')
+    config=language_model.generation_config
+    if config.num_beams not in (None,1) or config.repetition_penalty not in (None,1.0) or config.no_repeat_ngram_size:
+        raise ValueError('Unsupported generation options for exact greedy comparison')
+    output=language_model(inputs_embeds=inputs,attention_mask=attention,use_cache=True,return_dict=True,logits_to_keep=1)
+    cache=output.past_key_values;scores=output.logits[:,-1,:];tokens=[]
+    def ids():return torch.tensor([tokens],dtype=torch.long,device=inputs.device)
+    while len(tokens)<max_tokens:
+        masked=processor(ids(),scores)
+        if processor.phase=='done':break
+        tokens.append(int(masked.argmax(dim=-1).item()));pending=[tokens[-1]]
+        while len(tokens)<max_tokens:
+            masked=processor(ids(),scores)
+            if processor.phase=='done':break
+            top=torch.topk(masked,2,dim=-1)
+            if not torch.isneginf(top.values[0,1]).item():break
+            token=int(top.indices[0,0].item());tokens.append(token);pending.append(token)
+        if processor.phase=='done' or len(tokens)>=max_tokens:break
+        mask=torch.ones((1,inputs.shape[1]+len(tokens)),dtype=attention.dtype,device=inputs.device)
+        output=language_model(input_ids=torch.tensor([pending],dtype=torch.long,device=inputs.device),
+            attention_mask=mask,past_key_values=cache,use_cache=True,return_dict=True,logits_to_keep=1)
+        cache=output.past_key_values;scores=output.logits[:,-1,:]
+    return ids()
+
+
 class Backend:
     def __init__(self, checkpoint, device='cuda:0'):
         self.device = torch.device(device)
@@ -39,7 +67,12 @@ class Backend:
         self.model_id = sha.hexdigest()
         self.prompt_id = hashlib.sha256(ROBOT_QUERY.encode()).hexdigest()
         self.decoder = RobotJsonDecoder(self.tokenizer)
-        self.query = self.ids(ROBOT_QUERY)
+        self.decoders = {'baseline':self.decoder}
+        prompt_file=os.environ.get('VQA_PROMPT_FILE')
+        self.prompt=Path(prompt_file).read_text() if prompt_file else ROBOT_QUERY
+        if self.prompt!=ROBOT_QUERY:
+            raise ValueError('Project prompt differs from the validated checkpoint-compatible prompt; evaluate a separate research profile first')
+        self.query = self.ids(self.prompt)
         self.mask_query = self.ids('the people')
         self.lock = threading.Lock()
 
@@ -57,8 +90,22 @@ class Backend:
 
     @torch.inference_mode()
     def infer(self,data):
+        request_started=time.monotonic()
         camera,stamp,epoch = data['camera_id'],float(data['stamp']),data['source_epoch']
         mode = data.get('inference_mode','vqa-only')
+        decoding_profile=data.get('decoding_profile',os.environ.get('VQA_DECODING_PROFILE','baseline'))
+        engine=data.get('generation_engine',os.environ.get('VQA_GENERATION_ENGINE','hf'))
+        if engine not in ('hf','grammar_cached'):raise ValueError('Unknown generation engine')
+        if decoding_profile not in ('baseline','sentence_safe'):raise ValueError('Unknown decoding profile')
+        if decoding_profile not in self.decoders:
+            # Restrict narrative tokens only. JSON enum grammar, risk/action
+            # coupling, model logits and semantic schema checks are unchanged.
+            decoder=RobotJsonDecoder(self.tokenizer)
+            strings=self.tokenizer.batch_decode([[i] for i in decoder.text_ids],skip_special_tokens=False)
+            decoder.text_ids=[i for i,value in zip(decoder.text_ids,strings)
+                              if all(c.isascii() and (c.isalnum() or c in ' .,!?-') for c in value)]
+            self.decoders[decoding_profile]=decoder
+        decoder=self.decoders[decoding_profile]
         if mode not in ('vqa-only','yolo-assisted'):
             raise ValueError('Unknown inference mode')
         if camera not in ('chest','left_shoulder','right_shoulder','left_wrist'):
@@ -68,7 +115,7 @@ class Backend:
             raise ValueError('Invalid/oversized image')
         old = self.states.get(camera)
         state = None
-        continuity = bool(old and old[0] == epoch and old[3] == mode and 0 < stamp-old[1] <= self.manifest['config']['max_gap_s'])
+        continuity = bool(old and old[0] == epoch and old[3] == mode and old[4] == decoding_profile and old[5] == engine and 0 < stamp-old[1] <= self.manifest['config']['max_gap_s'])
         if continuity:
             state = old[2]
         started = time.monotonic()
@@ -82,25 +129,29 @@ class Backend:
             boxes = self.detector.detect(frame)
             detector_ms = round((time.monotonic()-detector_started)*1000,3)
             hints = self.hints[camera].update(boxes,stamp)
-            query = self.ids(query_with_hints(ROBOT_QUERY,hints))
+            query = self.ids(query_with_hints(self.prompt,hints))
         vision_started = time.monotonic()
         attention = torch.ones_like(self.mask_query)
         output = self.model(self.preprocess(frame)[None,None].to(self.device),self.mask_query,
                             attention_mask=attention,frame_valid=torch.ones((1,1),dtype=torch.bool,device=self.device),
                             dt=torch.ones((1,1),device=self.device),state=state,
                             return_language_context=True,compute_masks=False)
+        if self.device.type=='cuda':torch.cuda.synchronize()
         visual_ms = round((time.monotonic()-vision_started)*1000,3)
-        self.states[camera] = (epoch,stamp,tuple(v.detach() for v in output['state']),mode)
+        self.states[camera] = (epoch,stamp,tuple(v.detach() for v in output['state']),mode,decoding_profile,engine)
         count = output['visual_token_count']
         text = self.model.language_model.get_input_embeddings()(query)
         text = torch.where(query.eq(self.model.config.seg_token_id)[...,None],
                            self.model.seg_embedding.to(text),text)
         inputs = torch.cat([output['language_inputs'][:,:count],text],dim=1)
         attention = torch.ones(inputs.shape[:2],dtype=torch.long,device=self.device)
-        generated = self.model.generate_from_context(
-            inputs,attention,192,
-            stopping_criteria=StoppingCriteriaList([StopAfterJsonObject(self.tokenizer)]),
-            logits_processor=LogitsProcessorList([self.decoder.processor()]))
+        if engine=='grammar_cached':
+            generated=generate_grammar_cached(self.model.language_model,inputs,attention,192,decoder.processor())
+        else:
+            generated = self.model.generate_from_context(
+                inputs,attention,192,
+                stopping_criteria=StoppingCriteriaList([StopAfterJsonObject(self.tokenizer)]),
+                logits_processor=LogitsProcessorList([decoder.processor()]))
         raw = self.tokenizer.decode(generated[0],skip_special_tokens=True).strip()
         end = json_object_end(raw)
         try:
@@ -113,6 +164,10 @@ class Backend:
                       reason=error,model_id=self.model_id,prompt_id=self.prompt_id,worker_id=self.worker_id,
                       inference_ms=round((time.monotonic()-started)*1000,2),
                       decoding='constrained',camera_id=camera,stamp=stamp,inference_mode=mode,
+                      decoding_profile=decoding_profile,schema_error=error,
+                      generation_engine=engine,
+                      generation_tokens=int(generated.shape[-1]),
+                      request_ms=round((time.monotonic()-request_started)*1000,2),
                       yolo_hints=hints,metrics=dict(inference_mode=mode,segmentation_enabled=False,
                           bbox_source='yolo' if mode=='yolo-assisted' else 'none',person_boxes=boxes,
                           bbox_detector_ms=detector_ms,visual_memory_ms=visual_ms))
@@ -135,7 +190,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         self.send_json(200,dict(ready=True,worker_id=BACKEND.worker_id,model_id=BACKEND.model_id,
-                               prompt_id=BACKEND.prompt_id,torch=torch.__version__))
+                               prompt_id=BACKEND.prompt_id,torch=torch.__version__,
+                               default_decoding_profile=os.environ.get('VQA_DECODING_PROFILE','baseline'),
+                               default_generation_engine=os.environ.get('VQA_GENERATION_ENGINE','hf')))
 
     def do_POST(self):
         if self.path != '/infer':
@@ -151,7 +208,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             result = BACKEND.infer(data)
-            print(json.dumps({k:result[k] for k in ('camera_id','stamp','action','valid','inference_ms','model_id')}),flush=True)
+            print(json.dumps({k:result[k] for k in ('camera_id','stamp','action','raw_action','valid','reason','inference_ms','generation_tokens','decoding_profile','generation_engine','model_id')}),flush=True)
             self.send_json(200,result)
         except Exception as exc:
             self.send_json(500,{'error':str(exc)})

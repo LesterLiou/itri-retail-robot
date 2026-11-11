@@ -1,0 +1,16 @@
+{
+  "seconds": 45.0,
+  "unique_model_results": 43,
+  "model_actions": {
+    "DANGER_WARNING": 39,
+    "CONTINUE": 4
+  },
+  "json_errors": 0,
+  "non_ascii_outputs": 0,
+  "schema_errors": {},
+  "sampled_health": {
+    "image/result expired": 186,
+    "valid": 682,
+    "capture expired before next adapter tick": 32
+  }
+}

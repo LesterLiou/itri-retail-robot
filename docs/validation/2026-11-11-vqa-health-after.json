@@ -1,0 +1,17 @@
+{
+  "duration_sec": 30.0,
+  "samples": {
+    "waiting": 16,
+    "valid": 542,
+    "image/result expired": 37,
+    "": 5
+  },
+  "valid_fraction": 0.9033,
+  "image_fps": 14.47,
+  "completed_results": 31,
+  "inference_ms_median": 928.11,
+  "inference_ms_max": 1314.69,
+  "capture_age_median": 1.5418376922607422,
+  "capture_age_max": 2.528742551803589,
+  "rviz_controls_node_observed": true
+}

@@ -1,0 +1,42 @@
+Accepted map goal (permission/execution still pending): {"mission_id": "22fc8189d56b4125a3fc3e2948d9b10b", "phase": "WAIT_NAV_READY", "reason": "", "scene_revision": 0, "runtime": "simulation", "request_stamp": 1794368086.1729207, "target": {"x": 0.6, "y": 0.2, "yaw": 0.0}, "last_goal_rejection": null}
+Phase: WAIT_NAV_READY Reason: 
+Phase: NAVIGATE Reason: 
+Phase: DONE Reason: simulation sequence completed; base remains disabled
+{
+  "mission": {
+    "mission_id": "22fc8189d56b4125a3fc3e2948d9b10b",
+    "phase": "DONE",
+    "reason": "simulation sequence completed; base remains disabled",
+    "scene_revision": 0,
+    "runtime": "simulation",
+    "request_stamp": 1794368086.1729207,
+    "target": {
+      "x": 0.6,
+      "y": 0.2,
+      "yaw": 0.0
+    },
+    "last_goal_rejection": null
+  },
+  "gate": {
+    "enabled": false,
+    "hold": false,
+    "reason": "DISABLED: explicit enable required",
+    "base_standstill": false,
+    "arms_stowed": true,
+    "feedback_age_sec": 0.019
+  },
+  "vqa": {
+    "action": "NO_DETECT",
+    "valid": true,
+    "reason": "fixture labels, no model inference",
+    "synthetic": true,
+    "capture_age_sec": 0.069
+  },
+  "odometry": {
+    "x": 0.542901362964316,
+    "y": 0.18979388931943017,
+    "vx": 0.0,
+    "vy": 0.0,
+    "wz": 0.0
+  }
+}

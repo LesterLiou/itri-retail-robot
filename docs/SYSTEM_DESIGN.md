@@ -2,6 +2,10 @@
 
 OpenArm × TidyBot × NVIDIA Jetson AGX Thor｜v0.5 RealSense／VQA 整合基線｜2026-11-10
 
+2026-11-11 操作更新：RViz 增加 `retail_rviz_plugins` 任務控制面板，直接使用既有任務服務與手動 lease owner；導航／MoveIt 工具皆可見，執行權仍依模式隔離。當前五套件的實際功能與 UI 流程見 [OPERATIONS](OPERATIONS.md)。VQA 歷史顯示與當前健康分開，未延長運動許可時效。
+
+目前補充：`retail_description` 提供 USD 轉出的底盤與 OpenArm 合併模型；原 VQA Monitor 改為 ROS Image／RiskAdvisory 訂閱者。真 RealSense／VQA 已接 Nav2 假底盤，RViz 新目標統一由 `/mission/goal_pose` 交任務管理器，再經本地 gate 執行。獨立 MoveIt 手動模式不啟動任務管理器／Nav2，以唯一 lease 和獨立 watchdog 管理執行窗口。當前架構與命令見 [README](../README.md)，實測範圍見 [本輪驗收](validation/2026-11-10-robot-ui-moveit.md)；[Isaac 接口](ISAAC_INTERFACE.md) 為待實作契約，不代表已有 bridge。
+
 已建立 ROS 2 相機／VQA／手部 adapters、Nav2 假底盤、MoveIt／雙臂 fake hardware、兩個本地閘門、場景／候選視角與任務管理，並完成隔離的固定目標任務閉環。實際模型回放與實測邊界見 [integration 驗收](validation/2026-11-10-integration.md)，操作見 [README](../README.md)。D435 純 RGB → VQA → RViz 已完成本機擷取與斷流驗收，見 [相機驗收](validation/2026-11-10-realsense-vqa.md)。真機運動、Thor、MASt3R 尺度／融合與真人共域尚未驗收。
 
 本輪把小型整合節點先集中於 `retail_core`，共用訊息在 `retail_interfaces`，配置／launch 在 `retail_bringup`；下面按功能命名的六套件仍是未來拆分提案。不要把目錄提案當成已存在的套件。實際目錄與 Docker 開發 overlay 見 [專案配置](PROJECT_LAYOUT.md)。

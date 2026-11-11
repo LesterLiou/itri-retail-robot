@@ -8,6 +8,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
 from .common import run
+from .world import load_world
 import numpy as np
 
 
@@ -15,6 +16,12 @@ class FakeBase(Node):
     def __init__(self):
         super().__init__('fake_tidybot')
         self.x = self.y = self.yaw = 0.0
+        self.bounds=[(-2.0,4.0,-2.0,2.0),(2.9,3.2,-0.9,0.9)]
+        world_file=self.declare_parameter('world_file','').value
+        if world_file:
+            world=load_world(world_file)
+            self.x,self.y,self.yaw=world['initial_pose']
+            self.bounds=[world['bounds']]+world['obstacles']
         self.cmd = Twist()
         self.received = 0.0
         self.last = time.monotonic()
@@ -64,7 +71,7 @@ class FakeBase(Node):
         msg.range_min, msg.range_max = 0.05, 10.0
         msg.scan_time = 0.1
         # Known simulated room bounds, plus a shelf obstacle in world coordinates.
-        bounds = [(-2.0,4.0,-2.0,2.0),(2.9,3.2,-0.9,0.9)]
+        bounds = self.bounds
         ranges = []
         for a in np.linspace(-math.pi, math.pi, 360):
             dx, dy = math.cos(a+self.yaw), math.sin(a+self.yaw)

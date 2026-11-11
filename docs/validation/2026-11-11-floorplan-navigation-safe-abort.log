@@ -1,0 +1,7 @@
+.................................                                        [100%]
+33 passed in 0.58s
+Traceback (most recent call last):
+  File "/workspace/scripts/check_floorplan_nav.py", line 41, in <module>
+    assert node.state.get('phase')=='DONE',node.state
+AssertionError: {'mission_id': '28cb6e4fe3394e60916a2a15d3fde72d', 'phase': 'HOLD', 'reason': 'nav_result failed: status=6, code=6', 'scene_revision': 0, 'runtime': 'simulation', 'request_stamp': 1794382639.9840784, 'target': {'x': 5.6, 'y': 3.7, 'yaw': 0.0}, 'last_goal_rejection': None}
+

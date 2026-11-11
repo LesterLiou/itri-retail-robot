@@ -1,0 +1,6 @@
+PASS: single composed URDF tree, TidyBot chassis + OpenArm, no Kinova, current state collision-free; links= 35
+Prepared fresh fake scene revision 1 ; base inhibited, measured stopped; existing scene TTL applies
+GUI execution window: 15 seconds. Re-plan with Plan & Execute; this terminal maintains the lease.
+GUI execution window closed; disarmed
+Prepared fresh fake scene revision 2 ; base inhibited, measured stopped; existing scene TTL applies
+PASS: MoveIt fresh plan executed through arm gate; measured joint standstill; base remains inhibited

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="590" viewBox="0 0 810 590">
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<g font-family="sans-serif" font-size="15" fill="#1e293b">
+<text x="70" y="25" font-size="20">Dimensioned floor plan / navigation draft</text>
+<text x="320" y="50">6.60 m</text>
+<rect x="70.0" y="65.0" width="660.0" height="440.00000000000006" fill="white"/>
+<rect x="70" y="65" width="660" height="440" fill="none" stroke="#111" stroke-width="2"/>
+<rect x="230.0" y="205.00000000000003" width="500.0" height="160.0" fill="#111"/>
+<text x="395" y="281" fill="white">5.00 x 1.60 m obstacle</text>
+<text x="320" y="130">1.40 m upper passage</text>
+<text x="320" y="455">1.40 m lower passage</text>
+<text x="85" y="275" transform="rotate(-90 85 275)">1.60 m left passage</text>
+<text x="32" y="290" transform="rotate(-90 32 290)">4.40 m</text>
+<circle cx="150.0" cy="435.0" r="7" fill="#0284c7"/><text x="160.0" y="427.0">Start (0.8, 0.7)</text>
+<circle cx="630.0" cy="435.0" r="7" fill="#0284c7"/><text x="640.0" y="427.0">A (5.6, 0.7)</text>
+<circle cx="630.0" cy="135.0" r="7" fill="#0284c7"/><text x="640.0" y="127.0">B (5.6, 3.7)</text>
+<circle cx="150.0" cy="135.0" r="7" fill="#0284c7"/><text x="160.0" y="127.0">C (0.8, 3.7)</text>
+<text x="70" y="540">Origin (0,0): inside bottom-left. All lengths are metres.</text>
+<text x="70" y="565">Draft from supplied dimensions; not surveyed or calibrated.</text></g></svg>

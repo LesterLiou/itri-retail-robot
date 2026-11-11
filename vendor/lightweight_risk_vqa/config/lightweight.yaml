@@ -1,0 +1,169 @@
+# Shared defaults; launches override source topics and clock explicitly.
+# No SAM3 model/mask/floor/near-field STOP is enabled in this experiment.
+lightweight_person_tracker:
+  ros__parameters:
+    model_path: /workspace/yolov8n.pt
+    device: cpu
+    image_size: 640
+    confidence: 0.1
+    track_high_threshold: 0.35
+    track_buffer: 15
+    inference_hz: 5.0
+    max_gap_s: 1.0
+    temporal_mode: heuristic
+    lstm_checkpoint: ''
+    sequence_length: 16
+    sample_hz: 5.0
+    temporal_max_gap_s: 0.6
+    temporal_confidence: 0.6
+    cpu_threads: 4
+    allow_download: false
+    max_image_age_s: 2.0
+    record_tracks_path: ''
+ground_trajectory:
+  ros__parameters:
+    use_sim_time: false
+    enable_motion_prediction: true
+    enable_zone_logic: false
+    show_track_id_overlay: true
+    show_prediction_overlay: false
+    calibration_mode: normalized_debug
+    calibration_valid: true
+    left_homography:
+    - 0.0010416667
+    - 0.0
+    - 0.0
+    - 0.0
+    - -0.0018518519
+    - 1.0
+    - 0.0
+    - 0.0
+    - 1.0
+    right_homography:
+    - 0.0010416667
+    - 0.0
+    - 0.0
+    - 0.0
+    - -0.0018518519
+    - 1.0
+    - 0.0
+    - 0.0
+    - 1.0
+    hazard_polygon:
+    - 0.35
+    - 0.0
+    - 0.65
+    - 0.0
+    - 0.65
+    - 0.28
+    - 0.35
+    - 0.28
+    warning_polygon:
+    - 0.2
+    - 0.0
+    - 0.8
+    - 0.0
+    - 0.8
+    - 0.48
+    - 0.2
+    - 0.48
+    prediction_horizon_s: 3.0
+    prediction_step_s: 0.2
+    process_noise: 0.5
+    measurement_noise: 0.08
+    minimum_track_age_frames: 2
+    max_track_gap_s: 1.5
+future_vqa:
+  ros__parameters:
+    use_sim_time: false
+    enable_future_vqa: true
+    include_tracking_context: true
+    show_sam3_detection_overlay: true
+    trajectory_context_mode: none
+    storyboard_mode: track_crops
+    vqa_inference_mode: per_track
+    per_track_max_new_tokens: 128
+    track_history_tolerance_s: 0.75
+    track_crop_padding_ratio: 0.3
+    track_crop_cell_size: 224
+    track_crop_max_agents: 6
+    motion_source: vlm
+    motion_scale_change_threshold: 0.12
+    motion_lateral_displacement_threshold: 0.35
+    motion_stationary_scale_threshold: 0.04
+    motion_stationary_lateral_threshold: 0.12
+    enable_collapse_detection: false
+    collapse_min_identical_tracks: 3
+    enable_effective_confidence: true
+    unreliable_tracking_confidence_scale: 0.5
+    left_image_topic: /left_camera/rgb
+    right_image_topic: /right_camera/rgb
+    use_compressed_image: false
+    backend: llava_worker
+    controller_url: http://127.0.0.1:11000
+    model_name: ''
+    request_timeout_s: 90.0
+    request_retry_count: 2
+    request_retry_backoff_s: 1.0
+    max_new_tokens: 512
+    use_cache: false
+    vqa_hz: 0.5
+    temporal_frame_count: 3
+    temporal_window_s: 2.0
+    jpeg_quality: 90
+    work_context: Observe what each tracked person is visibly doing now, then predict
+      only their near-future motion relative to the observing camera.
+future_risk_policy:
+  ros__parameters:
+    use_sim_time: false
+    decision_mode: future_behavior_policy
+    enable_action_output: true
+    behavior_stop_motions:
+    - DISABLED
+    behavior_warning_motions:
+    - TOWARD_CAMERA
+    - UNCERTAIN
+    behavior_continue_motions:
+    - AWAY_FROM_CAMERA
+    - LATERAL_ACROSS_VIEW
+    - STATIONARY
+    behavior_continue_confirmations_required: 1
+    stop_tte_s: 1.0
+    warning_tte_s: 3.0
+    semantic_confidence_threshold: 0.55
+    require_vlm_for_continue: true
+    continue_confirmations_required: 2
+    geometry_timeout_s: 2.0
+    semantics_timeout_s: 20.0
+    heartbeat_hz: 5.0
+future_risk_video_source:
+  ros__parameters:
+    use_sim_time: false
+    left_video_path: /workspace/example/video/0610_take3n4.mp4
+    right_video_path: /workspace/example/video/0610x9_v0629.mp4
+    left_image_topic: /left_camera/rgb
+    right_image_topic: /right_camera/rgb
+    use_compressed_image: false
+    loop_videos: true
+    playback_rate: 1.0
+    output_fps: 10.0
+    output_width: 960
+    output_height: 540
+    left_start_offset_s: 0.0
+    right_start_offset_s: 0.0
+future_risk_experiment_logger:
+  ros__parameters:
+    use_sim_time: false
+    output_root: /workspace/results/lightweight_risk_vqa
+    run_name: lightweight_video
+    save_storyboards: true
+lightweight_temporal_fusion:
+  ros__parameters:
+    fusion_mode: diagnostic
+    history_retention_s: 180.0
+    alignment_tolerance_s: 0.6
+lightweight_temporal_analysis:
+  ros__parameters:
+    temporal_mode: heuristic
+    temporal_confidence: 0.6
+    tracking_timeout_s: 2.0

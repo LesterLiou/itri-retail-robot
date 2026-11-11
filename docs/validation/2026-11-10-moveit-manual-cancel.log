@@ -1,0 +1,23 @@
+PASS: manual MoveIt cancellation verified by joint standstill; HOLD remains; no queued goal replay
+Prepared fresh fake scene revision 2 ; base inhibited, measured stopped; existing scene TTL applies
+Stopped: measured standstill; HOLD remains latched
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/retail_ws/install/retail_core/lib/python3.10/site-packages/retail_core/manual_control.py", line 153, in main
+    else:node.move_to(args.group,args.joints)
+  File "/opt/retail_ws/install/retail_core/lib/python3.10/site-packages/retail_core/manual_control.py", line 124, in move_to
+    self.until(result.done,timeout=20,guard=guard)
+  File "/opt/retail_ws/install/retail_core/lib/python3.10/site-packages/retail_core/manual_control.py", line 54, in until
+    rclpy.spin_once(self,timeout_sec=0.03)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 208, in spin_once
+    executor.spin_once(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+    self._spin_once_impl(timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 801, in _spin_once_impl
+    handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 784, in wait_for_ready_callbacks
+    return next(self._cb_iter)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 681, in _wait_for_ready_callbacks
+    wait_set.wait(timeout_nsec)
+KeyboardInterrupt
+

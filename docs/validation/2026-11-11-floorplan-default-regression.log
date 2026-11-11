@@ -1,0 +1,3 @@
+.................................                                        [100%]
+33 passed in 0.59s
+PASS: task-owned map goal, conflicting/duplicate/invalid goals rejected; cancel/hold/reset never replay old goal; fresh goal completed {'mission_id': 'e595b3ac6f574393b23f1fd2509c24f4', 'phase': 'DONE', 'reason': 'simulation sequence completed; base remains disabled', 'scene_revision': 0, 'runtime': 'simulation', 'request_stamp': 1794383063.3991342, 'target': {'x': 0.6, 'y': 0.2, 'yaw': 0.0}, 'last_goal_rejection': None}

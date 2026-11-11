@@ -1,0 +1,17 @@
+{
+  "duration_sec": 30.0,
+  "samples": {
+    "waiting": 1,
+    "valid": 525,
+    "image/result expired": 48,
+    "robot VQA LOW risk contradicts insufficient motion evidence in explanation": 16,
+    "": 10
+  },
+  "valid_fraction": 0.875,
+  "image_fps": 14.63,
+  "completed_results": 31,
+  "inference_ms_median": 932.16,
+  "inference_ms_max": 1268.65,
+  "capture_age_median": 1.5737860202789307,
+  "capture_age_max": 2.3803653717041016
+}

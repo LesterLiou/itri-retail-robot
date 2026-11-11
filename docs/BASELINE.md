@@ -1,5 +1,23 @@
 # 整合開發基線
 
+## 2026-11-11 VQA 資產與短片診斷更新
+
+依授權把完整 checkpoint／tokenizer、YOLO、VQA 固定來源、原測試影片與 prompt 複製到本專案，逐檔 hash 核對，實際 Docker 資產掛載皆在 repo 內。VQA UI 固定四個模型選項，健康另列，不編機率或輪播。已分析原始影片與 45 秒 raw 回答：失效有欄位混入、語義矛盾和擷取過期，不是 UTF 編碼損壞。新受限文字 profile 與實驗 KV-cache 引擎保留原 schema／TTL；11 筆配對的決策欄位同、9 筆文字同，16 個 CPU 分塊案例通過。真相機 45 秒 median 424 ms、無過期，仍拒絕 1 筆語義矛盾。詳細限制與資產位置見 [VQA_DIAGNOSTICS](VQA_DIAGNOSTICS.md)。
+
+## 2026-11-11 RViz 操作面板與 VQA 顯示更新
+
+目前五個整合套件新增 `retail_rviz_plugins`，RViz 同時保留 Nav2 目標工具、MoveIt 與任務按鈕。面板重用 task reset/cancel、唯一手動 owner 與 watchdog，不發 raw velocity。VQA 完成時以 guard condition 立即通知 ROS，UI 保留 Last valid 年齡供歷史參考，capture stamp／2 秒 TTL／失效 HOLD 不變。操作與實際功能分工見 [OPERATIONS](OPERATIONS.md)，視角和 MoveIt 欄位見 [逐項教學](RVIZ_MOVEIT_GUIDE.md)。
+
+## 2026-11-11 操作模式更新
+
+修正自動 launch／手動補開 RViz 的競爭：兩者統一使用映像內 helper 與同一把鎖。導航使用獨立俯視地圖配置，MoveIt 模式才顯示 Motion Planning。新增唯讀 `demo_control status` 與 `goto --wait` 區分接收目標與實際結果；導航模式的 manual_control 提供模式切換提示。原始碼／colcon 工作流程及分模式操作見 [Docker 教學第 10–11 節](DOCKER_USAGE.md#10-nav2-與-moveit-到底先開哪一個)。
+
+## 2026-11-10 合併模型、ROS UI 與導航更新
+
+目前四個整合套件包含 `retail_description`。從提供的 USD 抽出 TidyBot 底盤，與固定 SHA 的 OpenArm 合併成單一 robot_description；0.34 m 裝配偏移是未校正的假硬體配置。原 VQA Monitor 已移植為 ROS UI，YOLO-assisted 使用原模型／prompt／decoder，支援影片與真實 D435。獨立 MoveIt 手動模式有控制 lease、心跳 watchdog、取消／失聯停止驗收。
+
+RViz `/mission/goal_pose` 經任務管理器送至 Nav2。22 個單元測試、地圖目標／取消／重設／衝突／拒絕舊目標測試通過。真相機／真 VQA 曾允許虛擬底盤移動 0.0884 m，後因 DATA_LOSS 取消並維持 HOLD；不是到點成功。Isaac 僅有接口契約，runtime 暫緩。完整命令、映像及證據見 [本輪驗收](validation/2026-11-10-robot-ui-moveit.md)。以下為先前階段紀錄。
+
 ## 2026-11-10 本機顯示器更新
 
 依目前需求已移除虛擬桌面、VNC、網頁服務與其 port，重建 dev／sim 映像。預設使用宿主 DISPLAY、私人 Xauthority 和唯讀 X11 socket，RViz 直接在 Ubuntu 桌面開視窗；純 CPU 模式不開任何顯示伺服器。各 Compose 用法見 README 第 7 節，本輪驗收見 [本機 RViz](validation/2026-11-10-native-display.md)。下面含網頁桌面的紀錄保留為歷史快照。
@@ -90,5 +108,7 @@ OpenArm bringup 已確認 `use_fake_hardware` **預設 false**，controller 預�
 8. 既有設計書中提及的計畫書頁碼、純 RGB 驗收條文及 2026-11-30 交期未附原始計畫書，本次沒有查證，不能作為已確認的需求證據。
 
 ## 實際驗收
+
+2026-11-11 新增使用者尺寸圖 profile：室內 6.6×4.4 m、中央障礙 5×1.6 m，未現場校正。Docker 內 33 個單元測試、繞行閉環、原地圖取消／重啟回歸及原生 RViz 顯示通過；真機定位／LiDAR／AMCL 未測。見 [地圖驗收](validation/2026-11-11-floorplan.md)。
 
 完整指令與輸出見 [開發環境驗收紀錄](validation/2026-11-10-dev.md)。未執行項目按上列清單保留，不以靜態讀碼替代功能測試。

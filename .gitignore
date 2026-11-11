@@ -1,5 +1,20 @@
-.env
-external/
+# Host-specific environment and secrets; commit the template only.
+/.env
+/.env.*
+!/.env.example
+**/.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Upstream sources are restored from dependencies.repos (not submodules).
+/external/
+
+# ROS / colcon generated outputs.
+/build/
+/install/
+/log/
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
@@ -11,15 +26,47 @@ ros2_ws/src/openarm_bimanual_moveit_config
 __pycache__/
 .pytest_cache/
 *.pyc
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+venv/
 # GUI crash dumps and editor caches are generated locally.
 core
 core.[0-9]*
 .cache/
+/.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Runtime logs stay local; curated acceptance evidence remains versioned.
+*.log
+!docs/validation/**/*.log
+.ros/
+.rviz2/
+
+# Sensor recordings, weights and local assets are distributed separately.
 *.bag
+*.bag.active
 *.db3
 *.mcap
 models/
 checkpoints/
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.engine
+*.mp4
+*.avi
+*.mov
 config/calibration/local/
 config/local/
 data/
+
+# Only the small documented map delivery is kept, not arbitrary export bundles.
+/exports/*
+!/exports/store_corridor_nav2_map.zip

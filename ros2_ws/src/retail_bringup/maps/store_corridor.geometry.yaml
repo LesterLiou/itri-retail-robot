@@ -1,0 +1,10 @@
+# Interpretation of the user's dimensioned floor plan, 2026-11-11.
+# Metres; origin is the inside bottom-left corner. Not a surveyed map.
+map_yaml: store_corridor.yaml
+resolution: 0.05
+raster_padding_cells: 1
+bounds: [0.0, 6.6, 0.0, 4.4]  # xmin, xmax, ymin, ymax (inside wall faces)
+obstacles:
+  - [1.6, 6.6, 1.4, 3.0]     # 5.0 x 1.6 m, touches right wall
+initial_pose: [0.8, 0.7, 0.0] # fake simulation only; x,y,yaw
+calibrated: false

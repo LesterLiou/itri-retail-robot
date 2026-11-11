@@ -1,5 +1,5 @@
 {
-  "source": "tidybot_isaac_local_2/payloads/base.usda",
+  "source": "external/tidybot_isaac_local_2/payloads/base.usda",
   "prim": "/tidybot/Geometry/world/joint_x_jointbody/joint_y_jointbody/joint_th_jointbody/base/Kinova/Kinova",
   "units": "metres",
   "source_minimum": [
@@ -25,14 +25,14 @@
   "triangles": 62144,
   "note": "Chassis only; Kinova articulation excluded. Alignment is a display baseline, not measured OpenArm mounting calibration.",
   "files": {
-    "tidybot_isaac_local_2/payloads/Physics/mujoco.usda": "92b76dcc4aa981f46fe0a997ef5af523876044e8a57240ca3173d72f46273989",
-    "tidybot_isaac_local_2/payloads/Physics/physics.usda": "0969226e66e395f4348779de504cfb4c48e7a7b9157fdc51d75555165f9a7140",
-    "tidybot_isaac_local_2/payloads/Physics/physx.usda": "f92ab3956b4db1e929a58aa2f0dbfbb47ae7eaad72c6213361e49c5a9575c540",
-    "tidybot_isaac_local_2/payloads/base.usda": "ebc074cb9619e59c5ad30c0a2dc3fc7e436ad84c195c0cf36118a9acaefb85a7",
-    "tidybot_isaac_local_2/payloads/geometries.usd": "ca5ab1b76845ae71afc6bca7d41b94061ecc084ba79baa12fd0bd311ae90b99a",
-    "tidybot_isaac_local_2/payloads/instances.usda": "4d1c3229110793fc76c6ba92ab602b9b76577ef7ca810d2df67be5077888d846",
-    "tidybot_isaac_local_2/payloads/materials.usda": "2c14d3d4c0ac53a31e22d09dff3f7213bcf09fbf8c6cdee5275a7f8a104cd4d1",
-    "tidybot_isaac_local_2/payloads/robot.usda": "512e8009f71da0396d6fe63aa84aad40d66d896b6ec99483101462b4e76f5ca7",
-    "tidybot_isaac_local_2/tidybot_isaac_local.usda": "c71cd85d9d33433b0370b8fa2053aea7453e420fcee5f39229de181b3460b1c1"
+    "external/tidybot_isaac_local_2/payloads/Physics/mujoco.usda": "92b76dcc4aa981f46fe0a997ef5af523876044e8a57240ca3173d72f46273989",
+    "external/tidybot_isaac_local_2/payloads/Physics/physics.usda": "0969226e66e395f4348779de504cfb4c48e7a7b9157fdc51d75555165f9a7140",
+    "external/tidybot_isaac_local_2/payloads/Physics/physx.usda": "f92ab3956b4db1e929a58aa2f0dbfbb47ae7eaad72c6213361e49c5a9575c540",
+    "external/tidybot_isaac_local_2/payloads/base.usda": "ebc074cb9619e59c5ad30c0a2dc3fc7e436ad84c195c0cf36118a9acaefb85a7",
+    "external/tidybot_isaac_local_2/payloads/geometries.usd": "ca5ab1b76845ae71afc6bca7d41b94061ecc084ba79baa12fd0bd311ae90b99a",
+    "external/tidybot_isaac_local_2/payloads/instances.usda": "4d1c3229110793fc76c6ba92ab602b9b76577ef7ca810d2df67be5077888d846",
+    "external/tidybot_isaac_local_2/payloads/materials.usda": "2c14d3d4c0ac53a31e22d09dff3f7213bcf09fbf8c6cdee5275a7f8a104cd4d1",
+    "external/tidybot_isaac_local_2/payloads/robot.usda": "512e8009f71da0396d6fe63aa84aad40d66d896b6ec99483101462b4e76f5ca7",
+    "external/tidybot_isaac_local_2/tidybot_isaac_local.usda": "c71cd85d9d33433b0370b8fa2053aea7453e420fcee5f39229de181b3460b1c1"
   }
 }

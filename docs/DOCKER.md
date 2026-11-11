@@ -1,5 +1,9 @@
 # Docker 開發與驗收
 
+尺寸圖導航新增 `compose.floorplan.yaml`；CPU 假導航在無外部網路容器通過驗收，見 [地圖驗收](validation/2026-11-11-floorplan.md)。日常使用 `make floorplan`／`make floorplan-vqa`；檔案與定位說明見 [地圖教學](NAVIGATION_MAPS.md)。
+
+本輪新增的合併機器人、YOLO-assisted ROS UI、獨立 MoveIt lease／watchdog 與 RViz map goal 均在 Docker 建置與驗收，命令和映像 ID 見 [本輪驗收](validation/2026-11-10-robot-ui-moveit.md)。`make nav-vqa` 使用真相機／真模型、假底盤；`make moveit` 使用獨立假硬體控制。Isaac 僅保留契約配置，未啟動 runtime。
+
 ## Docker 整合系統入口
 
 目前新增 `sim` 與 `vqa-worker`，操作以 [README](../README.md) 為準。`sim` 在映像內編譯所有選定 ROS 套件，提供 Nav2／OpenArm fake hardware、本機 RViz2 視窗、感知 adapters 和本地閘門；透過本機 X11／XWayland 顯示，不映射馬達設備。`vqa-worker` 為選用 GPU 容器，唯讀掛載模型，由 ROS adapter 交付結果。CPU 模式與真實推論結果分開標記。
@@ -14,7 +18,7 @@ Docker Compose 是開發、模擬與三機部署的共同入口。目前提供 R
 
 預設 `make up`／`make dev`／`make vqa`／`make vqa-dev` 都直接開本機 RViz。Makefile 先執行 `scripts/prepare_gui.py`，只複製當前 DISPLAY 的授權到忽略的 `config/local/gui.Xauthority`，權限 0600；容器唯讀使用本機 X11 socket。從已登入桌面的終端機執行，無須放寬 xhost。Wayland 使用既有 XWayland。
 
-無視窗測試使用 `make up GUI=0`，或只用 `docker/compose.yaml`；不建立任何顯示伺服器。原有的虛擬桌面與網頁服務已移除，歷史驗收保留為當時快照。每份 Compose 的用途、完整組合命令與啟動順序見 [README 第 7 節](../README.md#7-檔案整理與驗收)。
+無視窗測試使用 `make up GUI=0`，或只用 `docker/compose.yaml`；不建立任何顯示伺服器。原有的虛擬桌面與網頁服務已移除，歷史驗收保留為當時快照。每份 Compose 的用途、完整組合命令與啟動順序見 [README](../README.md#開發來源與-compose)。
 
 ## 目前的 Docker 目錄與相機入口
 

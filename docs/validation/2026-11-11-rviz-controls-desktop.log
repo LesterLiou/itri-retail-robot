@@ -1,0 +1,3 @@
+/retail_rviz_controls
+PASS: single native RViz and VQA Monitor; task controls loaded; no motion goal sent by this check
+PASS ROS VQA UI: {"source": "external", "action": "DANGER_WARNING", "model_id": "30a2397b628c81721afde15c690122887b5a9709a9fa1bac0f7bb73f7403e619", "mode": "yolo-assisted", "capture_stamp": 1794370827.1315818, "people": 0, "inference_ms": 948.31}

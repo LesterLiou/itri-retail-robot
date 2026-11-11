@@ -3,6 +3,7 @@ x-display: &display
   DISPLAY: ${DISPLAY:-}
   XAUTHORITY: /workspace/config/local/gui.Xauthority
   QT_X11_NO_MITSHM: "1"
+  QT_QPA_PLATFORM: xcb
   LIBGL_ALWAYS_SOFTWARE: "1"
 
 services:

@@ -1,0 +1,7 @@
+model_actions: [STOP, DANGER_WARNING, CONTINUE, OBSERVE]
+evidence_fields: [observation, motion, approach_intent, collision_risk, explanation]
+health_is_separate: true
+health_failures: [capture_expired, camera_unavailable, inference_error, schema_rejected, source_changed]
+invented_probabilities_allowed: false
+history_grants_motion_permission: false
+legacy_no_detect_is_not_a_checkpoint_class: true

@@ -1,0 +1,14 @@
+............                                                             [100%]
+12 passed in 0.32s
+PASS MoveIt scene: shelf geometry committed and snack detached
+PASS full {"mission_id": "f1ac3dbad3134f7587a12d3b78574737", "phase": "DONE", "reason": "simulation sequence completed; base remains disabled", "scene_revision": 2, "runtime": "simulation"} x= 2.041680334741488
+Traceback (most recent call last):
+  File "/opt/retail_ws/install/retail_core/lib/retail_core/manual_control", line 33, in <module>
+    sys.exit(load_entry_point('retail-core==0.1.0', 'console_scripts', 'manual_control')())
+  File "/opt/retail_ws/install/retail_core/lib/python3.10/site-packages/retail_core/manual_control.py", line 176, in main
+    node.check_profile()
+  File "/opt/retail_ws/install/retail_core/lib/python3.10/site-packages/retail_core/manual_control.py", line 81, in check_profile
+    raise RuntimeError('Start make moveit first; mission and manual modes are exclusive')
+RuntimeError: Start make moveit first; mission and manual modes are exclusive
+[ros2run]: Process exited with failure 1
+PASS: mission profile rejects manual ownership

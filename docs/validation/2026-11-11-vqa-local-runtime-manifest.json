@@ -1,0 +1,26 @@
+{
+  "sim_image": "sha256:bfe9140f0f8d1a1eba2e048e243d4a4c492a7bb671332cde38e1145d66536597",
+  "runtime_profile": {
+    "decoding": "sentence_safe",
+    "engine": "grammar_cached",
+    "hardware": "isolated fake motors / real RGB camera"
+  },
+  "sha256": {
+    "docker/vqa_worker.py": "eef7218d6f4de669e8149030b512ec0ea59dea87ffb7d5d5a99e0757079513b7",
+    "docker/compose.yaml": "1764f730e2ef418c862640f56a4cc826dae0759bfa402b9a22ca73edc9ccf494",
+    "docker/compose.ui.yaml": "5d36173509dc4523a89195f8ec146267f918d42f7eacfb36a71d7a0f5b0137d4",
+    "docker/Dockerfile": "efc2e55d7be27ba0570cef50ec30c90285090a1918e5219390ff178c66fbb84c",
+    ".env.example": "8dd984a121bc59597b9877b67cd7e848a23169da7222372ff894c53ff958f36d",
+    "scripts/localize_vqa.py": "b1aa5c414d6e20d81f67e70884897088881d70c2f3485fcb5c60a37a683a12e0",
+    "scripts/verify_vqa_assets.py": "dce8b5e1fb9ed492c8c797a0c1e89028b10641f30ab300a2562ee8d1cbba6fe6",
+    "scripts/compare_vqa_decoders.py": "97bd78cc77b15afcaefa11914b5402d7c2c24843b54f078bc9a880ad18225ae6",
+    "scripts/compare_vqa_engines.py": "ed74ad879b675bc257cb9069bdb63bbf05bf91ce0e816a3133cfeed5335db2ec",
+    "scripts/test_grammar_cached.py": "b40ff07c800bae325962bbecf70c28674875d61eab15308fbe071fcccc7de3da",
+    "scripts/audit_vqa_outputs.py": "808fad83007ff91a3ebae1f5a76cd7bd098ae4ac96dbb23de508adec54f73e54",
+    "config/vqa/prompt_training_compatible.txt": "d02131eab27f7639a650c3bcca26baae02ad80fd3d0f3558f8ed14e2ce070f21",
+    "config/vqa/decision_contract.yaml": "aaf67a76986975d6c638c77d53d53b84acfa8b91b452c7721388dcdba321372a",
+    "config/vqa/assets.manifest.json": "d9f5ae6efb0fc5452d75bab351ccc7412fa7315f6263b3c45134d606777c666e",
+    "ros2_ws/src/retail_core/retail_core/vqa_monitor_view.py": "ef21928a72274db9b385ffe88903d46b482ffbe279eb7599ed2f2a4a87d774f6",
+    "ros2_ws/src/retail_core/retail_core/vqa_ui.py": "7184d200fef7c527574a27f3507c38a22f19f804b2f6991403974e74e00a1d38"
+  }
+}

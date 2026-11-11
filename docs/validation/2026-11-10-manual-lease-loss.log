@@ -1,0 +1,5 @@
+PASS: single composed URDF tree, TidyBot chassis + OpenArm, no Kinova, current state collision-free; links= 35
+PASS: conflicting lease rejected without cancelling the current owner
+PASS: manual MoveIt owner loss verified by joint standstill; HOLD remains; no queued goal replay
+Prepared fresh fake scene revision 1 ; base inhibited, measured stopped; existing scene TTL applies
+

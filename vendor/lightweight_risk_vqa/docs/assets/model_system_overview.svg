@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1050" viewBox="0 0 1440 1050" role="img" aria-labelledby="title desc">
+<title id="title">Lightweight temporal VQA: model boundaries and optional paths</title>
+<desc id="desc">One integrated bundle shares MobileNet, FPN and ConvLSTM across Qwen VQA, optional masks, and an experimental motion head. Optional YOLO is a separate detector. A separate external LLaVA baseline consumes the camera frame and mask. Offline teachers are not live models.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8" fill="#516174"/></marker></defs>
+<style>text{font-family:Arial,sans-serif;fill:#172b46}.title{font-size:27px;font-weight:700}.sub{font-size:16px;fill:#526174}.head{font-size:18px;font-weight:700}.body{font-size:16px}.note{font-size:15px;fill:#526174}</style>
+<rect width="1440" height="1050" fill="#fff"/>
+<text x="35" y="43" class="title">Lightweight Temporal VQA — deployed model boundaries</text>
+<text x="35" y="72" class="sub">A unified checkpoint has multiple functions. A segmentation mask is not fed back into embedded Qwen.</text>
+
+<rect x="235" y="102" width="1170" height="582" rx="12" fill="#f1faf5" stroke="#309b67" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="250" y="130" class="head">ONE INTEGRATED BUNDLE  |  MobileNetV3 + ConvLSTM + Qwen3-0.6B</text>
+<rect x="28" y="225" width="174" height="100" rx="12" fill="#edf5fa" stroke="#7c9bb5" stroke-width="2"/>
+<text x="43" y="253" class="head">Camera NOW</text>
+<text x="43" y="279" class="body">One RGB frame</text>
+<text x="43" y="302" class="body">320 x 320 input</text>
+<rect x="265" y="225" width="225" height="100" rx="12" fill="#edf5fa" stroke="#7c9bb5" stroke-width="2"/>
+<text x="280" y="253" class="head">Visual encoder</text>
+<text x="280" y="279" class="body">MobileNetV3-Large</text>
+<text x="280" y="302" class="body">FPN: 128 channels</text>
+<rect x="530" y="225" width="235" height="100" rx="12" fill="#edf5fa" stroke="#7c9bb5" stroke-width="2"/>
+<text x="545" y="253" class="head">ConvLSTM memory</text>
+<text x="545" y="279" class="body">Hidden + cell: 64 ch</text>
+<text x="545" y="302" class="body">Carry state to next frame</text>
+<rect x="815" y="212" width="245" height="126" rx="12" fill="#edf5fa" stroke="#7c9bb5" stroke-width="2"/>
+<text x="830" y="240" class="head">Token projectors</text>
+<text x="830" y="266" class="body">64 current visual tokens</text>
+<text x="830" y="289" class="body">16 past-memory tokens</text>
+<text x="830" y="312" class="body">80 tokens x 1024 dims</text>
+<rect x="1110" y="212" width="265" height="126" rx="12" fill="#edf5fa" stroke="#7c9bb5" stroke-width="2"/>
+<text x="1125" y="240" class="head">Embedded Qwen3-0.6B</text>
+<text x="1125" y="266" class="body">Visual + memory + query</text>
+<text x="1125" y="289" class="body">Generates VQA JSON</text>
+<text x="1125" y="312" class="body">VQA language branch</text>
+<rect x="1090" y="426" width="285" height="108" rx="12" fill="#fff4df" stroke="#d6a54b" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="1105" y="454" class="head">Optional segmentation</text>
+<text x="1105" y="480" class="body">Qwen &lt;seg&gt; + spatial maps</text>
+<text x="1105" y="503" class="body">Mask + presence output</text>
+<rect x="540" y="441" width="330" height="92" rx="12" fill="#f5f0ff" stroke="#9b83bd" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="555" y="469" class="head">Experimental motion head</text>
+<text x="555" y="495" class="body">Linear(64, 5), weak-label trained</text>
+<text x="555" y="518" class="body">Not reliable enough for deployment</text>
+<rect x="270" y="570" width="700" height="82" rx="12" fill="#fff" stroke="#309b67" stroke-width="2"/>
+<text x="285" y="598" class="head">--no-segmentation</text>
+<text x="285" y="624" class="body">Skips mask/presence and the segmentation LM prepass.</text>
+<polyline points="202,275 265,275" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="265.0,275.0 254.0,271.0 254.0,279.0" fill="#516174"/>
+<polyline points="490,275 530,275" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="530.0,275.0 519.0,271.0 519.0,279.0" fill="#516174"/>
+<polyline points="765,275 815,275" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="815.0,275.0 804.0,271.0 804.0,279.0" fill="#516174"/>
+<polyline points="490,225 490,170 935,170 935,212" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="935.0,212.0 939.0,201.0 931.0,201.0" fill="#516174"/>
+<text x="595" y="160" class="note">Current visual features</text>
+<polyline points="1060,275 1110,275" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="1110.0,275.0 1099.0,271.0 1099.0,279.0" fill="#516174"/>
+<polyline points="1240,338 1240,426" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="1240.0,426.0 1244.0,415.0 1236.0,415.0" fill="#516174"/>
+<text x="1250" y="390" class="note">&lt;seg&gt; hidden state</text>
+<polyline points="377,325 377,391 1090,391 1090,470" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="1090.0,470.0 1094.0,459.0 1086.0,459.0" fill="#516174"/>
+<text x="535" y="380" class="note">Spatial + memory maps</text>
+<polyline points="650,325 650,441" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)" stroke-dasharray="6 4"/><polygon points="650.0,441.0 654.0,430.0 646.0,430.0" fill="#516174"/>
+<polyline points="580,225 580,190 710,190 710,225" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)" stroke-dasharray="6 4"/><polygon points="710.0,225.0 714.0,214.0 706.0,214.0" fill="#516174"/>
+<text x="595" y="183" class="note">Recurrent h,c</text>
+<rect x="28" y="104" width="174" height="101" rx="12" fill="#eaf2ff" stroke="#487ec3" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="43" y="132" class="head">Optional YOLO</text>
+<text x="43" y="158" class="body">Separate detector</text>
+<text x="43" y="181" class="body">Count + bbox history</text>
+<polyline points="202,151 215,151 215,112 1245,112 1245,212" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)" stroke-dasharray="6 4"/><polygon points="1245.0,212.0 1249.0,201.0 1241.0,201.0" fill="#516174"/>
+<text x="485" y="98" class="note">Noisy numeric hints in text query; no fixed image zones</text>
+<text x="285" y="647" class="body">Keeps visual encoding, recurrent state and VQA.</text>
+<text x="250" y="671" class="note">Live outputs: action / people source / latency / explanation / full raw response. Invalid or stale result: DATA_LOSS.</text>
+<rect x="28" y="718" width="1377" height="151" rx="12" fill="#fff8ef" stroke="#d08a39" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="43" y="746" class="head">RETAINED TWO-MODEL BASELINE  |  ConvLSTM segmentation + external LLaVA</text>
+<rect x="52" y="762" width="405" height="81" rx="12" fill="#fff" stroke="#d08a39" stroke-width="2"/>
+<text x="67" y="790" class="head">Model 1: temporal segmentation</text>
+<text x="67" y="816" class="body">MobileNet + ConvLSTM + Qwen &lt;seg&gt; + mask</text>
+<rect x="515" y="762" width="320" height="81" rx="12" fill="#fff" stroke="#d08a39" stroke-width="2"/>
+<text x="530" y="790" class="head">Image interface</text>
+<text x="530" y="816" class="body">Current frame + red mask overlay</text>
+<rect x="895" y="762" width="483" height="81" rx="12" fill="#fff" stroke="#d08a39" stroke-width="2"/>
+<text x="910" y="790" class="head">Model 2: external LLaVA / RoboPoint worker</text>
+<text x="910" y="816" class="body">Separate weights + service; produces VQA text</text>
+<polyline points="457,801 515,801" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="515.0,801.0 504.0,797.0 504.0,805.0" fill="#516174"/>
+<polyline points="835,801 895,801" fill="none" stroke="#516174" stroke-width="2.4" marker-end="url(#arrow)"/><polygon points="895.0,801.0 884.0,797.0 884.0,805.0" fill="#516174"/>
+<rect x="28" y="904" width="1377" height="110" rx="12" fill="#f3f5f7" stroke="#9ba7b5" stroke-width="2"/>
+<text x="43" y="932" class="head">OFFLINE DATA GENERATION — excluded from vqa-only live inference</text>
+<text x="43" y="958" class="body">Human COCO / JAAD / MeViS labels + SAM3 masks + YOLO geometry + frozen Qwen3-VL-2B captions/counts.</text>
+<text x="43" y="981" class="body">Teachers are not fine-tuned here. Retail motion, intention and collision labels are not human ground truth.</text>
+</svg>

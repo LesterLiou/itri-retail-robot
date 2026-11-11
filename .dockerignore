@@ -6,8 +6,13 @@
 !docker/entrypoint.bash
 !docker/dev_check.bash
 !docker/requirements-perception.txt
+!docker/requirements-yolo.txt
 !docker/run_sim.bash
 !docker/cyclonedds-local.xml
+!scripts/
+!scripts/open_rviz.py
+!vendor/
+!vendor/lightweight_risk_vqa/**
 !ros2_ws/
 !ros2_ws/src/
 !ros2_ws/src/**

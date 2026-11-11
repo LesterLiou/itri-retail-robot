@@ -63,7 +63,7 @@ COPY external/openarm_dev/ros2_ws/src/openarm_ros2/openarm_hardware /opt/retail_
 COPY external/openarm_dev/ros2_ws/src/openarm_ros2/openarm_bringup /opt/retail_ws/src/vendor/openarm_bringup
 COPY external/openarm_dev/ros2_ws/src/openarm_ros2/openarm_bimanual_moveit_config /opt/retail_ws/src/vendor/openarm_bimanual_moveit_config
 COPY external/social-safety-decision/realtime_safety /opt/retail_upstream/safety/realtime_safety
-COPY external/VLMotion_VQA/ros2_ws/src/lightweight_risk_vqa /opt/retail_upstream/vqa
+COPY vendor/lightweight_risk_vqa /opt/retail_upstream/vqa
 COPY external/tidybot_ros2_control /opt/retail_ws/src/vendor/tidybot_ros2_control
 ENV PYTHONPATH=/opt/retail_upstream/safety:/opt/retail_upstream/vqa
 COPY ros2_ws/src /opt/retail_ws/src/integration
@@ -74,6 +74,7 @@ RUN source /opt/ros/humble/setup.bash \
     && python3 /usr/bin/colcon build --executor sequential --cmake-args -DCMAKE_BUILD_TYPE=Release \
     && chmod -R a+rX /opt/retail_ws
 COPY docker/run_sim.bash /opt/itri/run_sim.bash
+COPY scripts/open_rviz.py /opt/itri/open_rviz.py
 COPY docker/cyclonedds-local.xml /opt/itri/cyclonedds-local.xml
 USER developer
 CMD ["bash", "/opt/itri/run_sim.bash"]

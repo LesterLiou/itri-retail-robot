@@ -1,0 +1,6 @@
+pytest>=7,<9
+numpy>=1.26,<3
+Pillow>=10,<13
+requests>=2.31,<3
+opencv-python-headless>=4.8,<5
+PyYAML>=6,<7

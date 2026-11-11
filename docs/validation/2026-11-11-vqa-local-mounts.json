@@ -1,0 +1,22 @@
+[
+  {
+    "source": "/home/lester/obstacle_avoid/config/vqa",
+    "destination": "/config/vqa",
+    "read_only": true
+  },
+  {
+    "source": "/home/lester/obstacle_avoid/models/yolo/yolov8n.pt",
+    "destination": "/models/yolov8n.pt",
+    "read_only": true
+  },
+  {
+    "source": "/home/lester/obstacle_avoid/vendor/lightweight_risk_vqa",
+    "destination": "/upstream/vqa",
+    "read_only": true
+  },
+  {
+    "source": "/home/lester/obstacle_avoid/models/vqa/best",
+    "destination": "/models/vqa",
+    "read_only": true
+  }
+]

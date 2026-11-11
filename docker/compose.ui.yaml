@@ -7,12 +7,14 @@ services:
       dockerfile: docker/Dockerfile.vqa-yolo
       args:
         VQA_BASE_IMAGE: ${VQA_WORKER_IMAGE:-itri-retail-robot:vqa-worker}
+        USER_UID: ${LOCAL_UID:-1000}
+        USER_GID: ${LOCAL_GID:-1000}
     environment:
       YOLO_WEIGHTS: /models/yolov8n.pt
       YOLO_CONFIG_DIR: /tmp/retail-yolo
     volumes:
       - type: bind
-        source: ${YOLO_MODEL_FILE:?Set YOLO_MODEL_FILE to existing yolov8n.pt}
+        source: ${YOLO_MODEL_FILE:-./models/yolo/yolov8n.pt}
         target: /models/yolov8n.pt
         read_only: true
         bind:

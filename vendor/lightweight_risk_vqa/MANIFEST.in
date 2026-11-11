@@ -1,0 +1,8 @@
+include README.md CHANGELOG.md THIRD_PARTY.md package.xml setup.cfg requirements-*.txt
+recursive-include docs *.md *.svg *.png
+recursive-include scripts *.sh *.py
+recursive-include config *.yaml *.json
+recursive-include launch *.py
+recursive-include resource *
+recursive-include test *.py
+recursive-include .github *.yml

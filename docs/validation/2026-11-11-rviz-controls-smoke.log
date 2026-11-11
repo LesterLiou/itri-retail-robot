@@ -1,0 +1,2 @@
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-developer'
+PASS: installed RViz plugin, typed reset/cancel callbacks, mode isolation, HOLD and stale-feedback UI cases; no motion endpoints

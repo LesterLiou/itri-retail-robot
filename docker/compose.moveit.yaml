@@ -1,0 +1,9 @@
+# Exclusive manual MoveIt session on isolated fake hardware; no Nav2 or missions.
+services:
+  sim:
+    environment:
+      CONTROL_MODE: moveit
+      VQA_BACKEND: fixture
+      HAND_BACKEND: fixture
+      CAMERA_SOURCE: synthetic
+      VIDEO_PATH: ""

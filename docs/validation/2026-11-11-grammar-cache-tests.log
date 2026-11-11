@@ -1,0 +1,1 @@
+PASS: 16 CPU greedy/KV-cache boundary cases, exact forced/free tokens, truncation, all four actions; no model weights or ROS

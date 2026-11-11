@@ -1,0 +1,7 @@
+.................................                                        [100%]
+33 passed in 0.54s
+Traceback (most recent call last):
+  File "/workspace/scripts/check_floorplan_nav.py", line 37, in <module>
+    assert footprint_clear(p.position.x,p.position.y,yaw,world['bounds'],world['obstacles']),f'Footprint intersects design wall at {p}'
+AssertionError: Footprint intersects design wall at geometry_msgs.msg.Pose(position=geometry_msgs.msg.Point(x=1.0168220035656945, y=1.2613931723881444, z=0.0), orientation=geometry_msgs.msg.Quaternion(x=0.0, y=0.0, z=0.5135331282983678, w=0.8580697676413568))
+

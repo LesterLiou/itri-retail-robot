@@ -1,0 +1,21 @@
+name: Lightweight VQA checks
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  cpu:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Locate standalone package or monorepo checkout
+        run: |
+          if [ -f setup.py ]; then
+            echo 'PACKAGE_DIR=.' >> "$GITHUB_ENV"
+          else
+            echo 'PACKAGE_DIR=ros2_ws/src/lightweight_risk_vqa' >> "$GITHUB_ENV"
+          fi
+      - run: python -m pip install -r "$PACKAGE_DIR/requirements-dev.txt"
+      - run: bash "$PACKAGE_DIR/scripts/check.sh"

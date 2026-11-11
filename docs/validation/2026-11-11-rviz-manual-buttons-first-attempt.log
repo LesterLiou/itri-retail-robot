@@ -1,0 +1,8 @@
+PASS: single composed URDF tree, TidyBot chassis + OpenArm, no Kinova, current state collision-free; links= 35
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-developer'
+manual panel backend timeout: Prepared fresh fake scene revision 1 ; base inhibited, measured stopped; existing scene TTL applies
+GUI execution window: 15 seconds. Re-plan with Plan & Execute; this terminal maintains the lease.
+
+Process crashed
+[ros2run]: Process exited with failure 1
+
