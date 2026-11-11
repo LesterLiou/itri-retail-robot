@@ -7,7 +7,7 @@
 | 原 ConvLSTM／Qwen | `VQA_CHECKPOINT_DIR`，預設 `./models/vqa/best` | `-f docker/compose.cross-host.yaml` |
 | 原生 Qwen3-VL | `THOR_QWEN_MODEL_DIR`，預設 `./models/Qwen3-VL-2B-Instruct` | `-f docker/compose.cross-host.yaml -f docker/compose.thor-qwen.yaml` |
 
-Qwen3-VL 使用同一來源最近三張依擷取時間排序的 RGB 影格，發布方向和模型理由供觀測。有效回覆的建議固定是 `OBSERVE`。每次切換後會重新收集三張影格。若畫面間隔過大、來源改變或時間戳倒退，會重新收集。相機與結果仍由既有 adapter 檢查時效。
+Qwen3-VL 使用同一來源最近三張依擷取時間排序的 RGB 影格，發布方向和模型理由供觀測。有效回覆的 `TOWARD_CAMERA` 對應 `DANGER_WARNING`，其他方向維持 `OBSERVE`，因為單靠方向無法確認行進路徑是否暢通。每次切換後會重新收集三張影格。若畫面間隔過大、來源改變或時間戳倒退，會重新收集。相機與結果仍由既有 adapter 檢查時效。
 
 ## 啟動 Qwen3-VL
 

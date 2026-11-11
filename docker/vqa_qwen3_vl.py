@@ -45,6 +45,14 @@ def parse_motion(raw):
     return result
 
 
+def motion_advisory(parsed):
+    if parsed is None:
+        return 'DATA_LOSS', ''
+    if parsed['motion'] == 'TOWARD_CAMERA':
+        return 'DANGER_WARNING', 'Model detected movement toward the camera.'
+    return 'OBSERVE', 'Direction alone does not establish that the path is clear.'
+
+
 class Qwen3VLBackend:
     model_backend = 'qwen3-vl'
 
@@ -112,11 +120,9 @@ class Qwen3VLBackend:
             reason = '' if parsed else 'Qwen3-VL response failed the motion schema'
 
         elapsed = round((time.monotonic() - started) * 1000, 2)
-        # This checkpoint estimates direction only. Publish OBSERVE to the
-        # observation domain and retain the model's evidence for the monitor.
-        action = 'OBSERVE' if parsed else 'DATA_LOSS'
+        action, policy_reason = motion_advisory(parsed)
         evidence = parsed['evidence'] if parsed else ''
-        view = dict(parsed, explanation=evidence) if parsed else None
+        view = dict(parsed, explanation=evidence, policy_reason=policy_reason) if parsed else None
         return dict(
             action=action, raw_action=action, valid=bool(parsed), reason=reason,
             motion=parsed['motion'] if parsed else 'UNCERTAIN', observation='', explanation=evidence,

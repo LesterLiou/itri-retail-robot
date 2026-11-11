@@ -30,7 +30,9 @@ def main():
         assert result['stamp'] == stamp and result['model_id'] == health['model_id'], result
         assert len(result['history_capture_stamps']) == frame, result
         if frame == 3:
-            assert result['valid'] and result['action'] == 'OBSERVE', result
+            expected_action = 'DANGER_WARNING' if result['motion'] == 'TOWARD_CAMERA' else 'OBSERVE'
+            assert result['valid'] and result['action'] == expected_action, result
+            assert json.loads(result['raw'])['policy_reason'], result
             assert result['model_raw'] and result['explanation'], result
         else:
             assert not result['valid'] and result['action'] == 'DATA_LOSS', result
