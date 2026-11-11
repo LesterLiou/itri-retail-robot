@@ -11,9 +11,9 @@ import uuid
 import cv2
 from PIL import Image
 import torch
-from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+from transformers import AutoProcessor, Qwen3VLForConditionalGeneration, StoppingCriteriaList
 
-from lightweight_risk_vqa.robot_vqa import MOTIONS
+from lightweight_risk_vqa.robot_vqa import MOTIONS, json_object_end
 
 
 PROMPT = (
@@ -21,18 +21,20 @@ PROMPT = (
     'Compare the same main visible person across the images. Classify their movement relative to the camera '
     'over the sequence using exactly one of TOWARD_CAMERA, AWAY_FROM_CAMERA, LATERAL_ACROSS_VIEW, '
     'STATIONARY, UNCERTAIN. Judge change across images and use UNCERTAIN if the evidence is ambiguous. '
-    'Return only a JSON object with keys "motion" and "evidence". In evidence, briefly say what visibly changed or stayed the same.'
+    'Return a single compact JSON object with keys "motion" and "evidence". '
+    'Use at most eight words of visible evidence. No markdown or extra text.'
 )
 FRAME_COUNT = 3
 MAX_GAP_SECONDS = 2.0
 
 
+def motion_json(raw):
+    return raw.strip().removeprefix('```json').removeprefix('```').removesuffix('```').strip()
+
+
 def parse_motion(raw):
-    text = raw.strip()
-    if text.startswith('```') and text.endswith('```'):
-        text = text.removeprefix('```json').removeprefix('```').removesuffix('```').strip()
     try:
-        result = json.loads(text)
+        result = json.loads(motion_json(raw))
     except ValueError:
         return None
     if not isinstance(result, dict) or set(result) != {'motion', 'evidence'}:
@@ -75,7 +77,7 @@ class Qwen3VLBackend:
         if not math.isfinite(stamp) or data.get('inference_mode', 'vqa-only') != 'vqa-only':
             raise ValueError('Qwen3-VL requires a finite capture timestamp and vqa-only input')
         image = Image.fromarray(cv2.cvtColor(self.decode_frame(data), cv2.COLOR_BGR2RGB))
-        image.thumbnail((480, 360), Image.Resampling.BILINEAR)
+        image.thumbnail((384, 288), Image.Resampling.BILINEAR)
         previous_epoch, frames = self.history.get(camera, (None, ()))
         if previous_epoch != epoch or not frames or not 0 < stamp - frames[-1][0] <= MAX_GAP_SECONDS:
             frames = deque(maxlen=FRAME_COUNT)
@@ -93,8 +95,17 @@ class Qwen3VLBackend:
                 [{'role': 'user', 'content': content}], tokenize=True, add_generation_prompt=True,
                 return_dict=True, return_tensors='pt',
             ).to(self.device)
-            output = self.model.generate(**inputs, max_new_tokens=128, do_sample=False)
-            generated = output[0, inputs['input_ids'].shape[1]:]
+            prefix_length = inputs['input_ids'].shape[1]
+
+            def complete_motion_json(input_ids, scores, **kwargs):
+                text = self.processor.decode(input_ids[0, prefix_length:], skip_special_tokens=True)
+                return json_object_end(motion_json(text)) is not None
+
+            output = self.model.generate(
+                **inputs, max_new_tokens=64, do_sample=False,
+                stopping_criteria=StoppingCriteriaList([complete_motion_json]),
+            )
+            generated = output[0, prefix_length:]
             tokens = generated.numel()
             raw = self.processor.decode(generated, skip_special_tokens=True).strip()
             parsed = parse_motion(raw)

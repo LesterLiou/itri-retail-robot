@@ -18,7 +18,14 @@ docker compose --project-directory . -f docker/compose.cross-host.yaml \
 curl -fsS http://127.0.0.1:8090/health
 ```
 
-`/health` 應顯示 `model_backend: qwen3-vl`、權重的 `model_id` 和 `prompt_id`。此指令假設既有 `thor-adapter` 已啟動。首次安裝請依主 README 建置觀測映像與 GPU worker。改用另一份相容的 Qwen3-VL bundle 時，在本機 `.env` 設定 `THOR_QWEN_MODEL_DIR`，或把該變數加在這次指令前，再執行同一條切換指令。權重需已存在，worker 以離線模式載入。
+`/health` 應顯示 `model_backend: qwen3-vl`、權重的 `model_id` 和 `prompt_id`。5070 Monitor 收到相機畫面後若仍顯示 `No model response yet`，用 `docker compose --project-directory . -f docker/compose.cross-host.yaml ps -a` 檢查 `thor-adapter`。它負責把影像交給 worker 並發布 ROS 結果。若服務已停止，在同一 checkout 執行：
+
+```bash
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  up -d --no-deps thor-adapter
+```
+
+首次安裝請依主 README 建置觀測映像與 GPU worker。改用另一份相容的 Qwen3-VL bundle 時，在本機 `.env` 設定 `THOR_QWEN_MODEL_DIR`，或把該變數加在這次指令前，再執行同一條切換指令。權重需已存在，worker 以離線模式載入。
 
 ## 切回 ConvLSTM
 
