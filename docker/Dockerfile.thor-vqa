@@ -1,0 +1,7 @@
+ARG THOR_PYTORCH_IMAGE=nvcr.io/nvidia/pytorch:25.11-py3@sha256:417cbf33f87b5378849df37983552cd1f8bc8b62fe1ceabe004de816a55dff21
+FROM ${THOR_PYTORCH_IMAGE}
+RUN python3 -m venv --system-site-packages /opt/vqa && \
+    /opt/vqa/bin/python -m pip install --no-cache-dir \
+      transformers==5.15.0 opencv-python-headless==4.11.0.86 pyyaml==6.0.3
+ENV PATH=/opt/vqa/bin:$PATH
+ENV XDG_CACHE_HOME=/tmp/retail-cache TORCH_HOME=/tmp/retail-torch

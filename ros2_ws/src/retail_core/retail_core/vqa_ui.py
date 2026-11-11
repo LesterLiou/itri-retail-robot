@@ -12,7 +12,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import qos_profile_sensor_data
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage, Image
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from retail_interfaces.msg import RiskAdvisory,GateState
@@ -24,6 +24,10 @@ class RosPipeline(Node):
     def __init__(self):
         super().__init__('vqa_ui')
         camera = self.declare_parameter('camera','chest').value
+        transport = self.declare_parameter('image_transport', 'raw').value
+        if transport not in ('raw', 'compressed'):
+            raise ValueError('image_transport must be raw or compressed')
+        image_type, suffix = (CompressedImage, '/compressed') if transport == 'compressed' else (Image, '')
         self.args = SimpleNamespace(query=ROBOT_QUERY,no_segmentation=True,
             inference_mode='yolo-assisted',vqa_backend='embedded',max_result_age_s=2.0)
         self.lock = threading.Lock()
@@ -38,7 +42,8 @@ class RosPipeline(Node):
         self.odom=None
         self.frozen = None
         self.bridge = CvBridge()
-        self.create_subscription(Image,f'/cameras/{camera}/color/image_raw',self.receive_image,qos_profile_sensor_data)
+        self.create_subscription(image_type, f'/cameras/{camera}/color/image_raw{suffix}',
+                                 self.receive_image, qos_profile_sensor_data)
         self.create_subscription(RiskAdvisory,f'/perception/vqa/{camera}',self.receive_risk,10)
         self.create_subscription(String,f'/perception/vqa/{camera}/details',self.receive_details,10)
         self.create_subscription(GateState,'/base/gate_state',lambda m:self.save('gate',m),10)
@@ -54,7 +59,10 @@ class RosPipeline(Node):
 
     def receive_image(self,msg):
         try:
-            image = self.bridge.imgmsg_to_cv2(msg,'bgr8').copy()
+            if isinstance(msg, CompressedImage):
+                image = self.bridge.compressed_imgmsg_to_cv2(msg, 'bgr8')
+            else:
+                image = self.bridge.imgmsg_to_cv2(msg, 'bgr8').copy()
         except Exception:
             return
         with self.lock:

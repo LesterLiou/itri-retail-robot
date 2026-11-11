@@ -1,0 +1,5 @@
+ARG TIDYBOT_CAMERA_IMAGE=tidybot_ros2_control:jazzy-noble
+FROM ${TIDYBOT_CAMERA_IMAGE}
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-compressed-image-transport && rm -rf /var/lib/apt/lists/*

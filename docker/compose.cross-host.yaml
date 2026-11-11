@@ -1,0 +1,141 @@
+name: itri-cross-host
+
+x-observation-ros: &observation-ros
+  ROS_DOMAIN_ID: ${OBSERVATION_DOMAIN_ID:-84}
+  RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+  ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+  ROS_STATIC_PEERS: ${OBSERVATION_PEERS:-}
+  FASTDDS_BUILTIN_TRANSPORTS: LARGE_DATA
+
+services:
+  observer-5070: &observer
+    profiles: [observer]
+    image: itri-retail-robot:jazzy-observation
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.observation
+      target: observation
+    network_mode: host
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: *observation-ros
+    command: [ros2, topic, list, --no-daemon]
+
+  monitor-5070:
+    <<: *observer
+    profiles: [monitor]
+    image: itri-retail-robot:jazzy-monitor
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.observation
+      target: monitor
+    environment:
+      <<: *observation-ros
+      DISPLAY: ${DISPLAY:-}
+      XAUTHORITY: /tmp/retail-gui.Xauthority
+      QT_X11_NO_MITSHM: "1"
+      QT_QPA_PLATFORM: xcb
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - type: bind
+        source: ./config/local/gui.Xauthority
+        target: /tmp/retail-gui.Xauthority
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [ros2, run, retail_core, vqa_ui, --ros-args, -p, "camera:=tidybot", -p, "image_transport:=compressed"]
+
+  tidybot-camera:
+    profiles: [tidybot]
+    image: itri-retail-robot:jazzy-tidybot-camera
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.tidybot-camera
+      args:
+        TIDYBOT_CAMERA_IMAGE: ${TIDYBOT_CAMERA_IMAGE:-tidybot_ros2_control:jazzy-noble}
+    network_mode: host
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: *observation-ros
+    devices:
+      - ${RS_VIDEO0:-/dev/video0}:${RS_VIDEO0:-/dev/video0}
+      - ${RS_VIDEO1:-/dev/video1}:${RS_VIDEO1:-/dev/video1}
+      - ${RS_VIDEO2:-/dev/video2}:${RS_VIDEO2:-/dev/video2}
+      - ${RS_VIDEO3:-/dev/video3}:${RS_VIDEO3:-/dev/video3}
+      - ${RS_VIDEO4:-/dev/video4}:${RS_VIDEO4:-/dev/video4}
+      - ${RS_VIDEO5:-/dev/video5}:${RS_VIDEO5:-/dev/video5}
+    volumes:
+      - /run/udev:/run/udev:ro
+    entrypoint: ["/bin/bash", "-c", "source /opt/ros/jazzy/setup.bash && exec \"$$@\"", "--"]
+    command:
+      - ros2
+      - launch
+      - realsense2_camera
+      - rs_launch.py
+      - camera_namespace:=cameras
+      - camera_name:=tidybot
+      - enable_color:=true
+      - enable_depth:=false
+      - enable_infra1:=false
+      - enable_infra2:=false
+      - publish_tf:=false
+      - rgb_camera.color_profile:=640x480x15
+
+  thor-adapter:
+    profiles: [thor]
+    image: itri-retail-robot:jazzy-observation
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.observation
+      target: observation
+    network_mode: host
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment: *observation-ros
+    command:
+      - ros2
+      - run
+      - retail_core
+      - vqa_adapter
+      - --ros-args
+      - -p
+      - "cameras:=[tidybot]"
+      - -p
+      - image_transport:=compressed
+      - -p
+      - worker_url:=http://127.0.0.1:8090/infer
+
+  vqa-worker:
+    extends:
+      file: docker/compose.yaml
+      service: vqa-worker
+    profiles: [thor]
+    image: itri-retail-robot:thor-vqa
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.thor-vqa
+      args:
+        THOR_PYTORCH_IMAGE: ${THOR_PYTORCH_IMAGE:-nvcr.io/nvidia/pytorch:25.11-py3@sha256:417cbf33f87b5378849df37983552cd1f8bc8b62fe1ceabe004de816a55dff21}
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      CUDA_LAUNCH_BLOCKING: ${VQA_CUDA_LAUNCH_BLOCKING:-0}
+      VQA_GENERATION_ENGINE: ${VQA_GENERATION_ENGINE:-grammar_cached}
+    volumes:
+      - ./docker/vqa_worker.py:/app/vqa_worker.py:ro
+      - ./config/vqa:/config/vqa:ro
+      - type: bind
+        source: ${VQA_SOURCE_DIR:-./vendor/lightweight_risk_vqa}
+        target: /upstream/vqa
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${VQA_CHECKPOINT_DIR:-./models/vqa/best}
+        target: /models/vqa
+        read_only: true
+        bind:
+          create_host_path: false

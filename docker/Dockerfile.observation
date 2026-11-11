@@ -1,0 +1,15 @@
+FROM ros:jazzy-ros-base-noble@sha256:8eed0a4669bbf43ee331878a4c39bd8ebddea8e3312a58b4fae8edb14526b617 AS observation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-cv-bridge ros-jazzy-rmw-fastrtps-cpp ros-jazzy-visualization-msgs \
+    python3-opencv && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/observation
+COPY ros2_ws/src/retail_interfaces src/retail_interfaces
+COPY ros2_ws/src/retail_core src/retail_core
+RUN . /opt/ros/jazzy/setup.sh && colcon build --packages-select retail_interfaces retail_core
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/ros/jazzy/setup.bash && source /opt/observation/install/local_setup.bash && exec \"$@\"", "--"]
+
+FROM observation AS monitor
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pyqt5 libxcb-xinerama0 && rm -rf /var/lib/apt/lists/*
+COPY vendor/lightweight_risk_vqa/lightweight_risk_vqa /opt/vqa_source/lightweight_risk_vqa
+ENV PYTHONPATH=/opt/vqa_source

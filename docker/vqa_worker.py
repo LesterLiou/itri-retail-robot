@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import threading
 import time
+import traceback
 import uuid
 
 import cv2
@@ -74,11 +75,23 @@ class Backend:
             raise ValueError('Project prompt differs from the validated checkpoint-compatible prompt; evaluate a separate research profile first')
         self.query = self.ids(self.prompt)
         self.mask_query = self.ids('the people')
+        if (self.mask_query == self.model.config.seg_token_id).sum().item() != 1:
+            raise RuntimeError('VQA segmentation token check failed on the inference device')
         self.lock = threading.Lock()
 
     def ids(self,query):
-        return torch.tensor(self.tokenizer.encode(query+'\n<seg>\n',add_special_tokens=False),
-                            dtype=torch.long,device=self.device)[None]
+        marker = self.model.config.seg_token_id
+        tokens = self.tokenizer.encode(query+'\n<seg>\n', add_special_tokens=False)
+        if marker not in tokens:
+            # Some tokenizer builds split the marker when encoding adjacent text.
+            tokens = (
+                self.tokenizer.encode(query+'\n', add_special_tokens=False)
+                + [marker]
+                + self.tokenizer.encode('\n', add_special_tokens=False)
+            )
+        if tokens.count(marker) != 1:
+            raise ValueError('VQA prompt must encode exactly one checkpoint <seg> token')
+        return torch.tensor(tokens, dtype=torch.long, device=self.device)[None]
 
     @staticmethod
     def preprocess(frame):
@@ -108,7 +121,7 @@ class Backend:
         decoder=self.decoders[decoding_profile]
         if mode not in ('vqa-only','yolo-assisted'):
             raise ValueError('Unknown inference mode')
-        if camera not in ('chest','left_shoulder','right_shoulder','left_wrist'):
+        if camera not in ('chest','left_shoulder','right_shoulder','left_wrist','tidybot'):
             raise ValueError('Unknown camera ID')
         frame = cv2.imdecode(np.frombuffer(base64.b64decode(data['jpeg'],validate=True),np.uint8),cv2.IMREAD_COLOR)
         if frame is None or frame.shape[0]*frame.shape[1]>4096*4096:
@@ -211,6 +224,7 @@ class Handler(BaseHTTPRequestHandler):
             print(json.dumps({k:result[k] for k in ('camera_id','stamp','action','raw_action','valid','reason','inference_ms','generation_tokens','decoding_profile','generation_engine','model_id')}),flush=True)
             self.send_json(200,result)
         except Exception as exc:
+            traceback.print_exc()
             self.send_json(500,{'error':str(exc)})
         finally:
             BACKEND.lock.release()
@@ -218,7 +232,14 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     torch.set_num_threads(2)
-    BACKEND = Backend(os.environ.get('VQA_CHECKPOINT','/models/vqa'),os.environ.get('VQA_DEVICE','cuda:0'))
+    device = torch.device(os.environ.get('VQA_DEVICE', 'cuda:0'))
+    if device.type == 'cuda':
+        # A visible GPU can still lack executable kernels for its architecture.
+        print(json.dumps(dict(cuda_capability=torch.cuda.get_device_capability(device),
+                              cuda_arches=torch.cuda.get_arch_list())), flush=True)
+        if torch.arange(4, device=device).sum().item() != 6:
+            raise RuntimeError('CUDA startup computation returned an incorrect result')
+    BACKEND = Backend(os.environ.get('VQA_CHECKPOINT', '/models/vqa'), device)
     print(json.dumps(dict(ready=True,model_id=BACKEND.model_id,prompt_id=BACKEND.prompt_id,
                          worker_id=BACKEND.worker_id)),flush=True)
     ThreadingHTTPServer(('0.0.0.0',8090),Handler).serve_forever()

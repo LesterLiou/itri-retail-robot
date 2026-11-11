@@ -10,7 +10,7 @@ import cv2
 from cv_bridge import CvBridge
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage, Image
 from std_msgs.msg import Bool,String
 from visualization_msgs.msg import Marker
 from retail_interfaces.msg import RiskAdvisory
@@ -23,6 +23,10 @@ class VQAAdapter(Node):
         self.cameras = self.declare_parameter('cameras',['chest']).value
         self.backend = self.declare_parameter('backend','http').value
         self.input_source = self.declare_parameter('input_source','ros').value
+        transport = self.declare_parameter('image_transport', 'raw').value
+        if transport not in ('raw', 'compressed'):
+            raise ValueError('image_transport must be raw or compressed')
+        image_type, image_suffix = (CompressedImage, '/compressed') if transport == 'compressed' else (Image, '')
         self.inference_mode = self.declare_parameter('inference_mode','vqa-only').value
         if self.inference_mode not in ('vqa-only','yolo-assisted'):
             raise ValueError('Unknown VQA inference mode')
@@ -42,7 +46,8 @@ class VQAAdapter(Node):
         self.images = {c:self.create_publisher(Image,f'/perception/vqa/{c}/annotated',qos_profile_sensor_data) for c in self.cameras}
         self.markers = self.create_publisher(Marker,'/retail/status_markers',10)
         for c in self.cameras:
-            self.create_subscription(Image,f'/cameras/{c}/color/image_raw',lambda msg,c=c:self.receive(c,msg),qos_profile_sensor_data)
+            self.create_subscription(image_type, f'/cameras/{c}/color/image_raw{image_suffix}',
+                                     lambda msg,c=c:self.receive(c,msg), qos_profile_sensor_data)
         self.create_subscription(Bool,'/demo/obstacle',self.fixture_state,10)
         # Wake the ROS executor on completion instead of adding up to one timer
         # period to every inference cycle. Evidence TTL and capture stamps stay fixed.
@@ -55,6 +60,11 @@ class VQAAdapter(Node):
 
     def fixture_state(self,msg):
         self.obstacle, self.obstacle_at = msg.data,time.monotonic()
+
+    def decode_image(self, msg):
+        if isinstance(msg, CompressedImage):
+            return self.bridge.compressed_imgmsg_to_cv2(msg, 'bgr8')
+        return self.bridge.imgmsg_to_cv2(msg, 'bgr8')
 
     def receive(self,camera,msg):
         old = self.latest.get(camera)
@@ -102,7 +112,9 @@ class VQAAdapter(Node):
         advisory.raw_response = str(result.get('raw',''))
         advisory.reason = str(result.get('reason',''))
         # Never turn an expired successful result into a fresh clear observation.
-        if msg is None or not (0 <= now(self)-seconds(msg.header.stamp) <= 2.0):
+        if msg is None:
+            advisory.action, advisory.valid, advisory.reason = 'DATA_LOSS', False, 'no camera frame received'
+        elif not (0 <= now(self)-seconds(msg.header.stamp) <= 2.0):
             advisory.action, advisory.valid, advisory.reason = 'DATA_LOSS',False,'image/result expired'
         self.outputs[camera].publish(advisory)
         details = dict(result,stamp=seconds(msg.header.stamp) if msg else 0.0,
@@ -113,7 +125,7 @@ class VQAAdapter(Node):
                                         self.cameras.index(camera),1.8+0.18*self.cameras.index(camera),color))
         if msg:
             try:
-                image = self.bridge.imgmsg_to_cv2(msg,'bgr8').copy()
+                image = self.decode_image(msg).copy()
                 cv2.rectangle(image,(0,0),(image.shape[1],85),(20,20,20),-1)
                 cv2.putText(image,f'{camera}: {advisory.action} / {self.backend}',(10,28),cv2.FONT_HERSHEY_SIMPLEX,0.62,(40,210,255),2)
                 cv2.putText(image,advisory.observation[:76],(10,56),cv2.FONT_HERSHEY_SIMPLEX,0.4,(240,240,240),1)
@@ -157,7 +169,7 @@ class VQAAdapter(Node):
             if msg and seconds(msg.header.stamp) != self.processed.get(camera) and 0<=now(self)-seconds(msg.header.stamp)<2.0:
                 self.processed[camera] = seconds(msg.header.stamp)
                 try:
-                    image = self.bridge.imgmsg_to_cv2(msg,'bgr8')
+                    image = self.decode_image(msg)
                     future = self.worker_pool.submit(self.request,self.url,camera,msg,image,self.epoch,self.inference_mode)
                     self.pending = (camera,msg,future)
                     future.add_done_callback(self.inference_ready)

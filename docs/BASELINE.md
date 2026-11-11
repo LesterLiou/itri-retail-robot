@@ -1,5 +1,16 @@
 # 整合開發基線
 
+## 2026-11-11 TidyBot／THOR 連線與單相機階段
+
+已從 RTX 5070 主機透過 SSH alias `TidyBot` 與 `THOR` 做唯讀查證。Codex 遠端專案分別為 `ITRI_tidybot` 和 `ITRI_THOR`。整合 repo 與 THOR 的 `/home/hrc/itri-retail-robot` 均在乾淨的 `main`，HEAD 為 `7cc710dd3c3b24abb8ce1b084647c11e67d7ba49`（文件更新前）。
+
+| 主機 | 本次實際結果 |
+|---|---|
+| TidyBot | `x86_64`。USB 枚舉到 RealSense D435（`8086:0b07`）。運行中的底盤容器映像為 `tidybot_ros2_control:jazzy-noble`。控制 checkout 為乾淨的 `main`，SHA `195a46e5770e56ac35fb7fa437bb7fbad7d434b1`。Git 的既有 worktree 路徑失效，以 checkout 的 `GIT_DIR` 與 `GIT_WORK_TREE` 在單次查詢中指定。 |
+| THOR | `aarch64`，Jetson Linux R38.2.2，已有 `/opt/ros/jazzy`。目前 SSH 帳號查詢 Docker daemon 時回報權限不足，容器與 GPU worker 狀態待查。 |
+
+程式接點以本次唯讀查閱為準。底盤的 `ros2_base_node.py` 使用 `Twist`、`Bool`、`String` 及 `Odometry`，`ros2_control_mux.py` 的速度輸入為 `/teleop/cmd_vel` 和 `/docking/cmd_vel`。實際 runtime topic、ROS domain、RMW、QoS、D435 影像串流、THOR 推論與停止回饋仍待驗證。階段範圍和驗收順序見 [AGENTS.md](../AGENTS.md)。
+
 ## 2026-11-11 VQA 資產與短片診斷更新
 
 依授權把完整 checkpoint／tokenizer、YOLO、VQA 固定來源、原測試影片與 prompt 複製到本專案，逐檔 hash 核對，實際 Docker 資產掛載皆在 repo 內。VQA UI 固定四個模型選項，健康另列，不編機率或輪播。已分析原始影片與 45 秒 raw 回答：失效有欄位混入、語義矛盾和擷取過期，不是 UTF 編碼損壞。新受限文字 profile 與實驗 KV-cache 引擎保留原 schema／TTL；11 筆配對的決策欄位同、9 筆文字同，16 個 CPU 分塊案例通過。真相機 45 秒 median 424 ms、無過期，仍拒絕 1 筆語義矛盾。詳細限制與資產位置見 [VQA_DIAGNOSTICS](VQA_DIAGNOSTICS.md)。

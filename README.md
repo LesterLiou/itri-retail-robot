@@ -47,6 +47,91 @@ make help
 
 切換模式前先完成／取消當前任務。Makefile 會處理相機與 sim 網路 namespace 的啟動順序。`make shell` 只進入目前容器，不切換模式。關閉 VQA 監看視窗只關閉 UI，ROS 感知會繼續運作。
 
+## 三台主機啟動與關閉｜TidyBot 相機、THOR VQA、5070 監看
+
+依序啟動 **TidyBot 相機 → THOR 推論 → 5070 監看**。三台各自從整合 repo 啟動 Compose，使用 ROS 2 Jazzy、domain `84`。DDS peer 和相機裝置映射由各台本機 `.env` 提供。首次換機或 D435 重新枚舉時，參照 [跨機部署手冊](docs/CROSS_HOST_DEPLOYMENT.md)。
+
+這組服務用於影像與判斷監看。TidyBot 的搖桿和真機底盤控制由 domain `0` 的既有 `tidybot_ros2_control` 容器管理。
+
+### 1. TidyBot｜RealSense 相機
+
+在 TidyBot 終端啟動 `tidybot-camera`：
+
+```bash
+cd /home/hrc/itri-retail-robot
+unset OBSERVATION_PEERS
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  up -d --build tidybot-camera
+```
+
+確認收到一幀 JPEG，應顯示 `tidybot_color_optical_frame` 和擷取時間：
+
+```bash
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  exec tidybot-camera bash -c 'source /opt/ros/jazzy/setup.bash
+    timeout 10 ros2 topic echo /cameras/tidybot/color/image_raw/compressed \
+      sensor_msgs/msg/CompressedImage --once --field header --no-daemon \
+      --qos-reliability best_effort'
+```
+
+關閉相機：
+
+```bash
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  stop tidybot-camera
+```
+
+### 2. THOR｜VQA adapter 與 GPU worker
+
+在 THOR 終端啟動 `thor-adapter` 和 `vqa-worker`，依提示輸入本機 `sudo` 密碼：
+
+```bash
+cd /home/hrc/itri-retail-robot
+unset OBSERVATION_PEERS
+sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  up -d --build --wait vqa-worker thor-adapter
+curl -fsS http://127.0.0.1:8090/health
+```
+
+`ready: true` 表示 GPU 啟動檢查通過且模型已載入。查看推論日誌：
+
+```bash
+sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  logs --tail=60 vqa-worker thor-adapter
+```
+
+關閉推論服務：
+
+```bash
+sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  stop thor-adapter vqa-worker
+```
+
+### 3. 5070｜VQA Monitor
+
+在 5070 **桌面終端**開啟 `monitor-5070`，畫面會顯示 TidyBot RGB、THOR 判斷、理由與原始回傳：
+
+```bash
+cd /home/lester/obstacle_avoid
+unset OBSERVATION_PEERS
+make gui-setup
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  run --rm --no-deps --build monitor-5070
+```
+
+**關閉**時直接關掉視窗，或在啟動它的終端按 `Ctrl+C`。如果監看容器先前以名稱 `itri-vqa-monitor-5070` 在背景啟動，可執行 `docker stop itri-vqa-monitor-5070`。只關閉 5070 監看時，TidyBot 與 THOR 可繼續運行。
+
+在 5070 終端直接核對回傳，可按 `Ctrl+C` 停止監聽：
+
+```bash
+docker compose --project-directory . -f docker/compose.cross-host.yaml \
+  run --rm --no-deps --build observer-5070 \
+  ros2 topic echo /perception/vqa/tidybot \
+    retail_interfaces/msg/RiskAdvisory --no-daemon
+```
+
+收到近期的 `header.stamp`、`valid: true` 和 `synthetic: false`，即確認 TidyBot 影像經 THOR 推論後已回傳到 5070。整套關閉時可依序關掉 **5070 監看 → THOR 推論 → TidyBot 相機**。
+
 ## 合併 TidyBot 與 OpenArm
 
 提供的模型目前位於 `external/tidybot_isaac_local_2/`，是 **USD**，沒有 URDF，且含 Kinova 手臂。轉換工具只抽取實際底盤幾何，排除 Kinova，產生：
