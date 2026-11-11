@@ -100,6 +100,8 @@ sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
   logs --tail=60 vqa-worker thor-adapter
 ```
 
+要在 THOR 比較原生 Qwen3-VL 與原 ConvLSTM，依 [THOR 模型切換與回放](docs/THOR_VQA_MODELS.md) 選擇 Compose 設定並核對目前模型。
+
 關閉推論服務：
 
 ```bash

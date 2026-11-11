@@ -1,0 +1,12 @@
+# Add after compose.cross-host.yaml to replace only the THOR inference worker.
+services:
+  vqa-worker:
+    environment:
+      VQA_MODEL_BACKEND: qwen3-vl
+    volumes:
+      - type: bind
+        source: ${THOR_QWEN_MODEL_DIR:-./models/Qwen3-VL-2B-Instruct}
+        target: /models/vqa
+        read_only: true
+        bind:
+          create_host_path: false

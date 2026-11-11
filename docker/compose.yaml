@@ -139,7 +139,7 @@ services:
       VQA_CHECKPOINT: /models/vqa
       VQA_DEVICE: cuda:0
       VQA_PROMPT_FILE: /config/vqa/prompt_training_compatible.txt
-      VQA_DECODING_PROFILE: ${VQA_DECODING_PROFILE:-baseline}
+      VQA_DECODING_PROFILE: ${VQA_DECODING_PROFILE:-sentence_safe}
       VQA_GENERATION_ENGINE: ${VQA_GENERATION_ENGINE:-hf}
       HF_HUB_OFFLINE: "1"
       TRANSFORMERS_OFFLINE: "1"

@@ -21,6 +21,19 @@ from lightweight_risk_vqa.camera_policy import PersonBoxDetector
 from lightweight_risk_vqa.robot_decoding import RobotJsonDecoder
 
 
+DEFAULT_DECODING_PROFILE = 'sentence_safe'
+
+
+def decode_frame(data):
+    if data['camera_id'] not in ('chest', 'left_shoulder', 'right_shoulder', 'left_wrist', 'tidybot'):
+        raise ValueError('Unknown camera ID')
+    encoded = np.frombuffer(base64.b64decode(data['jpeg'], validate=True), np.uint8)
+    frame = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
+    if frame is None or frame.shape[0] * frame.shape[1] > 4096 * 4096:
+        raise ValueError('Invalid/oversized image')
+    return frame
+
+
 @torch.inference_mode()
 def generate_grammar_cached(language_model,inputs,attention,max_tokens,processor):
     """Batch grammar-forced runs into KV-cache updates; do not alter free logits."""
@@ -50,6 +63,8 @@ def generate_grammar_cached(language_model,inputs,attention,max_tokens,processor
 
 
 class Backend:
+    model_backend = 'convlstm'
+
     def __init__(self, checkpoint, device='cuda:0'):
         self.device = torch.device(device)
         dtype = torch.bfloat16 if self.device.type == 'cuda' else torch.float32
@@ -106,7 +121,7 @@ class Backend:
         request_started=time.monotonic()
         camera,stamp,epoch = data['camera_id'],float(data['stamp']),data['source_epoch']
         mode = data.get('inference_mode','vqa-only')
-        decoding_profile=data.get('decoding_profile',os.environ.get('VQA_DECODING_PROFILE','baseline'))
+        decoding_profile=data.get('decoding_profile',os.environ.get('VQA_DECODING_PROFILE',DEFAULT_DECODING_PROFILE))
         engine=data.get('generation_engine',os.environ.get('VQA_GENERATION_ENGINE','hf'))
         if engine not in ('hf','grammar_cached'):raise ValueError('Unknown generation engine')
         if decoding_profile not in ('baseline','sentence_safe'):raise ValueError('Unknown decoding profile')
@@ -121,11 +136,7 @@ class Backend:
         decoder=self.decoders[decoding_profile]
         if mode not in ('vqa-only','yolo-assisted'):
             raise ValueError('Unknown inference mode')
-        if camera not in ('chest','left_shoulder','right_shoulder','left_wrist','tidybot'):
-            raise ValueError('Unknown camera ID')
-        frame = cv2.imdecode(np.frombuffer(base64.b64decode(data['jpeg'],validate=True),np.uint8),cv2.IMREAD_COLOR)
-        if frame is None or frame.shape[0]*frame.shape[1]>4096*4096:
-            raise ValueError('Invalid/oversized image')
+        frame = decode_frame(data)
         old = self.states.get(camera)
         state = None
         continuity = bool(old and old[0] == epoch and old[3] == mode and old[4] == decoding_profile and old[5] == engine and 0 < stamp-old[1] <= self.manifest['config']['max_gap_s'])
@@ -202,10 +213,16 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def do_GET(self):
+        if BACKEND.model_backend == 'qwen3-vl':
+            decoding_profile, generation_engine = 'motion-json', 'hf-native'
+        else:
+            decoding_profile = os.environ.get('VQA_DECODING_PROFILE', DEFAULT_DECODING_PROFILE)
+            generation_engine = os.environ.get('VQA_GENERATION_ENGINE', 'hf')
         self.send_json(200,dict(ready=True,worker_id=BACKEND.worker_id,model_id=BACKEND.model_id,
                                prompt_id=BACKEND.prompt_id,torch=torch.__version__,
-                               default_decoding_profile=os.environ.get('VQA_DECODING_PROFILE','baseline'),
-                               default_generation_engine=os.environ.get('VQA_GENERATION_ENGINE','hf')))
+                               model_backend=BACKEND.model_backend,
+                               default_decoding_profile=decoding_profile,
+                               default_generation_engine=generation_engine))
 
     def do_POST(self):
         if self.path != '/infer':
@@ -239,8 +256,16 @@ if __name__ == '__main__':
                               cuda_arches=torch.cuda.get_arch_list())), flush=True)
         if torch.arange(4, device=device).sum().item() != 6:
             raise RuntimeError('CUDA startup computation returned an incorrect result')
-    BACKEND = Backend(os.environ.get('VQA_CHECKPOINT', '/models/vqa'), device)
+    checkpoint = os.environ.get('VQA_CHECKPOINT', '/models/vqa')
+    model_backend = os.environ.get('VQA_MODEL_BACKEND', 'convlstm')
+    if model_backend == 'convlstm':
+        BACKEND = Backend(checkpoint, device)
+    elif model_backend == 'qwen3-vl':
+        from vqa_qwen3_vl import Qwen3VLBackend
+        BACKEND = Qwen3VLBackend(checkpoint, device, decode_frame)
+    else:
+        raise ValueError(f'Unknown VQA_MODEL_BACKEND: {model_backend}')
     print(json.dumps(dict(ready=True,model_id=BACKEND.model_id,prompt_id=BACKEND.prompt_id,
-                         worker_id=BACKEND.worker_id)),flush=True)
+                         worker_id=BACKEND.worker_id,model_backend=BACKEND.model_backend)),flush=True)
     ThreadingHTTPServer(('0.0.0.0',8090),Handler).serve_forever()
 

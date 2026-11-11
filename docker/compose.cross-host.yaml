@@ -126,6 +126,7 @@ services:
       VQA_GENERATION_ENGINE: ${VQA_GENERATION_ENGINE:-grammar_cached}
     volumes:
       - ./docker/vqa_worker.py:/app/vqa_worker.py:ro
+      - ./docker/vqa_qwen3_vl.py:/app/vqa_qwen3_vl.py:ro
       - ./config/vqa:/config/vqa:ro
       - type: bind
         source: ${VQA_SOURCE_DIR:-./vendor/lightweight_risk_vqa}

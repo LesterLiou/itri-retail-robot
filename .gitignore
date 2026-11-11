@@ -49,6 +49,7 @@ core.[0-9]*
 .rviz2/
 
 # Sensor recordings, weights and local assets are distributed separately.
+/models
 *.bag
 *.bag.active
 *.db3
