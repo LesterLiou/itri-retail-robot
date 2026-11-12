@@ -52,6 +52,7 @@ make help
 | 功能 | 在哪台執行 | 專案根目錄 | Compose 入口 |
 |---|---|---|---|
 | 底盤驅動、手把與 CAN 初始化 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-base.yaml` |
+| 電池顯示 OCR（選用） | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-base.yaml` |
 | 本機仲裁、程式授權與跨機橋接 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-standby.yaml` |
 | 兩公尺任務管理 | THOR | /home/hrc/itri-retail-robot | `compose.robot-standby.yaml` |
 | D435 相機 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-observation.yaml` |
@@ -89,6 +90,15 @@ docker compose -f compose.robot-base.yaml ps -a tidybot
 
 整合 repo 內的 [底盤驅動來源](vendor/tidybot_ros2_control/UPSTREAM.md) 隨 ITRI 版本一起部署。若要關閉早期版本的底盤，停妥後也可執行 `docker stop tidybot_ros2_control`。
 
+若有配置讀取電池顯示的專用相機，可獨立開關 OCR 服務。配置與畫面位置見 [電池監看](vendor/tidybot_ros2_control/BATTERY_MONITOR.md)。
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-base.yaml up -d battery-monitor
+# 關閉
+docker compose -f compose.robot-base.yaml stop battery-monitor
+```
+
 ### 1.1 TidyBot｜程式控制待機
 
 首次部署本版時，先在 **TidyBot** 建置底盤及本機閘門映像，在 **THOR** 建置任務管理映像。兩台均從 `/home/hrc/itri-retail-robot` 執行：
@@ -101,6 +111,8 @@ docker compose -f compose.robot-standby.yaml build tidybot-drive
 # THOR
 docker compose -f compose.robot-standby.yaml build thor-straight
 ```
+
+跨機 DDS 若需指定靜態探索，在兩台各自的 `.env` 以 `NAV_PEERS` 指定對方的 IP。
 
 手把單獨使用時選 `manual`。程式控制時選 `navigation`，底盤保留手把輸入，由 TidyBot 本機閘門仲裁手把與程式目標。先確認底盤停妥，再從 NUC 終端啟動：
 
