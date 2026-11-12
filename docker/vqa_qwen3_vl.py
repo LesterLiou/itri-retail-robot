@@ -103,13 +103,17 @@ class Qwen3VLBackend:
         boxes = self.person_detector.detect(frame)
         box_area = max(((x2 - x1) * (y2 - y1) for x1, y1, x2, y2 in boxes), default=None)
         oversized = box_area is not None and box_area >= self.stop_area
-        image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        image.thumbnail((384, 288), Image.Resampling.BILINEAR)
         previous_epoch, frames = self.history.get(camera, (None, ()))
         if previous_epoch != epoch or not frames or not 0 < stamp - frames[-1][0] <= MAX_GAP_SECONDS:
             frames = deque(maxlen=FRAME_COUNT)
-        frames.append((stamp, image))
-        self.history[camera] = (epoch, frames)
+        if boxes:
+            image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            image.thumbnail((384, 288), Image.Resampling.BILINEAR)
+            frames.append((stamp, image))
+            self.history[camera] = (epoch, frames)
+        else:
+            frames.clear()
+            self.history.pop(camera, None)
 
         raw = ''
         parsed = None
@@ -140,7 +144,9 @@ class Qwen3VLBackend:
 
         elapsed = round((time.monotonic() - started) * 1000, 2)
         action, policy_reason = motion_advisory(parsed, boxes, box_area, self.far_area, self.stop_area)
-        valid = bool(parsed) or oversized
+        if not boxes:
+            action, policy_reason = 'OBSERVE', 'No person box detected in the current frame; motion is unknown.'
+        valid = bool(parsed) or oversized or not boxes
         motion = parsed['motion'] if parsed else 'UNCERTAIN'
         evidence = parsed['evidence'] if parsed else policy_reason
         view = dict(motion=motion, evidence=evidence, explanation=evidence,

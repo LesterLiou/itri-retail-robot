@@ -15,7 +15,7 @@ Qwen3-VL 以同一來源最近三張 RGB 影格判讀方向，YOLO 在最新一�
 | Qwen 判定 `TOWARD_CAMERA` | `DANGER_WARNING` |
 | 有可量測的人框、最大框未達停車門檻，且 Qwen 判定 `AWAY_FROM_CAMERA` | `CONTINUE` |
 | 只偵測到一人，Qwen 判定 `STATIONARY`，且未裁切的人框面積不超過 `QWEN_FAR_BOX_AREA_RATIO`（預設 10%） | `CONTINUE` |
-| 有效但證據未達以上條件 | `OBSERVE` |
+| 當前沒有偵測到人框，或有效證據未達以上條件 | `OBSERVE` |
 | 影格不足、回覆無效或結果過期 | `DATA_LOSS` |
 
 框面積是單眼影像中的遠近代理，以上為觀測用門檻。模型切換、來源改變或影格時間不連續時會重新收集影格。相機與結果仍由既有 adapter 檢查時效。
