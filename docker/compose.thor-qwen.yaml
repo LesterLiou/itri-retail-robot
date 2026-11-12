@@ -6,6 +6,7 @@ services:
       dockerfile: docker/Dockerfile.vqa-yolo
       args:
         VQA_BASE_IMAGE: itri-retail-robot:thor-vqa
+        INSTALL_OPENCV_RUNTIME: '1'
     environment:
       VQA_MODEL_BACKEND: qwen3-vl
       YOLO_WEIGHTS: /models/yolov8n.pt

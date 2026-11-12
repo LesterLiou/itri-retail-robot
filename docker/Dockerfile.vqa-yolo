@@ -1,6 +1,11 @@
 ARG VQA_BASE_IMAGE=itri-retail-robot:vqa-worker
 FROM ${VQA_BASE_IMAGE}
 USER root
+ARG INSTALL_OPENCV_RUNTIME=0
+RUN if [ "$INSTALL_OPENCV_RUNTIME" = 1 ]; then \
+      apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0t64 && \
+      rm -rf /var/lib/apt/lists/*; \
+    fi
 # Match the original VLMotion runtime; retain its existing Torch/CUDA stack.
 COPY docker/requirements-yolo.txt /opt/vqa/requirements-yolo.txt
 RUN python3 -m pip install --no-cache-dir -r /opt/vqa/requirements-yolo.txt
