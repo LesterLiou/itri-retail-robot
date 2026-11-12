@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 import math
 
+ADVISORY_SPEED_PERCENT = {'STOP': 0, 'DANGER_WARNING': 10, 'CONTINUE': 40, 'OBSERVE': 30}
+
 
 @dataclass
 class Observation:

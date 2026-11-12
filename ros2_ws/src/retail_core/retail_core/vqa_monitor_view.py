@@ -16,6 +16,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (QApplication,QHBoxLayout,QLabel,QLineEdit,QMainWindow,
  QPushButton,QTextEdit,QVBoxLayout,QWidget,QFrame,QSizePolicy)
+from .policy import ADVISORY_SPEED_PERCENT
 
 def to_pixmap(frame, target_width=720, target_height=None):
     if frame is None:
@@ -74,6 +75,8 @@ def monitor_summary(state, parsed, evidence):
                   f"SEEN: {compact(observation)} | MOTION: {compact(temporal)}")
         if parsed.get('collision_risk'):
             reason += f" | RISK: {parsed['collision_risk']}"
+        if parsed.get('policy_reason'):
+            reason += f"\nWHY (policy): {compact(parsed['policy_reason'])}"
         if decision.get('decision_authority') not in {'embedded_vqa', 'model_research_hint'}:
             reason += f"\nCOMMAND SOURCE: {decision.get('decision_authority')} · {decision['reason_code']}"
     else:
@@ -237,18 +240,24 @@ class Monitor(QMainWindow):
             self.history.setText(f"Last valid: {history['action']} · {history['age_sec']:.1f}s ago · HISTORY ONLY, no motion permission"+
                 ('' if history['same_source'] else ' · previous source'))
             if decision['action']=='DATA_LOSS':
-                text=f"LAST VALID: {history['action']} (history only)\nCURRENT: DATA_LOSS — motion denied"
+                text=f"LAST VALID: {history['action']} (history only)\nCURRENT: DATA_LOSS — motion denied · 0%"
         valid=bool(decision.get('data_available'))
+        advisory = decision['action'] if valid else 'OBSERVE'
+        parsed = state.get('vqa_parsed') if valid else None
+        source = 'POLICY SELECTED' if isinstance(parsed, dict) and parsed.get('policy_reason') else 'MODEL SELECTED'
         age=state.get('capture_age_sec',float('inf'))
         age_text=f'{age:.2f}s' if math.isfinite(age) else 'unavailable'
         self.health.setText(f"DATA HEALTH: {'VALID' if valid else 'DATA_LOSS'} · capture age {age_text} · {state.get('health_reason','')} · confidence percentages unavailable")
         self.health.setStyleSheet('font-size:13px;padding:4px;color:'+('#126b35' if valid else '#9d3518'))
         for action,label in self.action_choices.items():
-            current=valid and decision['action']==action
+            current=advisory==action
             retained=not valid and history and history['action']==action
-            tag='MODEL SELECTED' if current else ('HISTORY ONLY' if retained else '—')
+            if current and action == 'OBSERVE':
+                tag = 'MOTION DENIED · 0% OUTPUT'
+            else:
+                tag=source if current else ('HISTORY ONLY' if retained else '—')
             background=({'STOP':'#c62828','DANGER_WARNING':'#c17a00','CONTINUE':'#198754','OBSERVE':'#1473a8'}[action] if current else ('#fff2ce' if retained else '#edf2f6'))
-            label.setText(action+'\n'+tag)
+            label.setText(f'{action} · {ADVISORY_SPEED_PERCENT[action]}% PROFILE\n{tag}')
             label.setStyleSheet(f'background:{background};color:'+('white' if current else '#384654')+';font-size:13px;padding:6px;border-radius:5px')
         self.decision.setText(text)
         self.decision.setStyleSheet(f'background:{color};color:white;font-size:20px;padding:8px')

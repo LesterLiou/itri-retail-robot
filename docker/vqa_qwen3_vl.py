@@ -82,7 +82,7 @@ class Qwen3VLBackend:
         self.history = {}
         self.device = device
         self.decode_frame = decode_frame
-        self.stop_area = float(os.environ.get('QWEN_STOP_BOX_AREA_RATIO', '0.90'))
+        self.stop_area = float(os.environ.get('QWEN_STOP_BOX_AREA_RATIO', '0.40'))
         self.far_area = float(os.environ.get('QWEN_FAR_BOX_AREA_RATIO', '0.10'))
         if not 0 < self.far_area < self.stop_area <= 1:
             raise ValueError('Qwen person-box thresholds must satisfy 0 < far < stop <= 1')

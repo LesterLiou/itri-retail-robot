@@ -11,7 +11,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from retail_interfaces.msg import RiskAdvisory, GateState
 from .common import now, seconds, run, text_marker,finite_joints
-from .policy import GatePolicy, Observation
+from .policy import ADVISORY_SPEED_PERCENT, GatePolicy, Observation
 from visualization_msgs.msg import Marker
 from action_msgs.srv import CancelGoal
 from action_msgs.msg import GoalStatusArray
@@ -206,11 +206,12 @@ class BaseGate(Node):
                 self.nav_cancel_future = self.nav_cancel.call_async(CancelGoal.Request())
         self.was_held = self.policy.hold
         msg = Twist()
+        speed_percent = ADVISORY_SPEED_PERCENT['DANGER_WARNING' if warning else 'CONTINUE']
         if allowed and self.source in self.commands:
             cmd, received = self.commands[self.source]
             values = (cmd.linear.x, cmd.linear.y, cmd.angular.z)
             if time.monotonic()-received <= 0.25 and all(math.isfinite(x) for x in values):
-                factor = 0.5 if warning else 1.0
+                factor = speed_percent / 100
                 msg.linear.x = max(-0.25, min(0.25, values[0])) * factor
                 msg.linear.y = max(-0.25, min(0.25, values[1])) * factor
                 msg.angular.z = max(-0.5, min(0.5, values[2])) * factor
@@ -226,7 +227,7 @@ class BaseGate(Node):
         state.enabled, state.hold = allowed, self.policy.hold
         state.base_inhibited = self.policy.inhibited
         state.base_standstill, state.arms_stowed = stopped, stowed and fresh
-        state.reason = self.policy.reason if not allowed else 'NAVIGATING' + (' / warning: half speed' if warning else '')
+        state.reason = self.policy.reason if not allowed else f'NAVIGATING / speed scale {speed_percent}%'
         self.state_pub.publish(state)
         self.markers.publish(text_marker(self, state.reason, 20, 2.25, (1.0,0.4,0.1) if state.hold else (0.2,0.9,1.0)))
 

@@ -276,7 +276,7 @@ ros2 run retail_core demo_control cancel
 
 導航預設是 **TopDownOrtho 俯視圖**，顯示 Navigation Map、機器人、紅色模擬雷射、綠色 Nav2 路徑。它不是另一個網頁或獨立小地圖程式，也不需要 AMCL 的 2D Pose Estimate：目前 fake_base 已提供 map／odom 對齊。`Accepted map goal` 只表示接收到目標；`--wait` 會顯示後續 DONE／HOLD，status 可查看實際原因。
 
-UI 頂端顯示任務階段、閘門許可／HOLD 與底盤 x/y。`CONTINUE` 是通行建議，`DANGER_WARNING` 依現有策略降為半速；`STOP`、`OBSERVE`、`DATA_LOSS` 或過期會拒絕運動許可，行進中取消導航並維持 HOLD。即使後來恢復 CONTINUE，也要先排除原因、確認停止／收納，再明確 reset、重新給目標。冷啟動或推論延遲超過有效期也會停下，不延長有效期來維持移動。
+UI 頂端顯示任務階段、閘門許可／HOLD 與底盤 x/y。`CONTINUE` 是通行建議，隔離模擬依限幅後速度請求的 40% 執行，`DANGER_WARNING` 使用 10%；`STOP`、`OBSERVE`、`DATA_LOSS` 或過期會拒絕運動許可，行進中取消導航並維持 HOLD。即使後來恢復 CONTINUE，也要先排除原因、確認停止／收納，再明確 reset、重新給目標。冷啟動或推論延遲超過有效期也會停下，不延長有效期來維持移動。
 
 Isaac 已整理好 topic／frame／時間與重置契約，見 [Isaac 接口](docs/ISAAC_INTERFACE.md) 與 [配置範本](config/interfaces/isaac.example.yaml)。目前 `runtime_enabled: false`，沒有安裝或啟動 Isaac bridge；後續以它取代 fake_tidybot 的回饋來源。
 

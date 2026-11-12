@@ -88,6 +88,9 @@ def test_monitor_labels_retained_continue_as_history_not_current_permission(pipe
         assert set(window.action_choices)=={'STOP','DANGER_WARNING','CONTINUE','OBSERVE'}
         assert 'HISTORY ONLY' in window.action_choices['CONTINUE'].text()
         assert 'MODEL SELECTED' not in window.action_choices['CONTINUE'].text()
+        assert '30% PROFILE' in window.action_choices['OBSERVE'].text()
+        assert 'MOTION DENIED · 0% OUTPUT' in window.action_choices['OBSERVE'].text()
+        assert 'background:#1473a8' in window.action_choices['OBSERVE'].styleSheet()
         assert 'DATA_LOSS' in window.health.text()
         assert pipeline.snapshot()['decision']['data_available'] is False
         risk.action='STOP';pipeline.receive_risk(risk);window.refresh()

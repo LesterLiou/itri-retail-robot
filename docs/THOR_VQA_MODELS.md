@@ -11,7 +11,7 @@ Qwen3-VL 以同一來源最近三張 RGB 影格判讀方向，YOLO 在最新一�
 
 | 條件 | 觀測建議 |
 |---|---|
-| 最大單人框面積達 `QWEN_STOP_BOX_AREA_RATIO`（預設 90%） | `STOP`，這筆結果可直接由 YOLO 產生 |
+| 最大單人框面積達 `QWEN_STOP_BOX_AREA_RATIO`（預設 40%） | `STOP`，這筆結果可直接由 YOLO 產生 |
 | Qwen 判定 `TOWARD_CAMERA` | `DANGER_WARNING` |
 | 有可量測的人框、最大框未達停車門檻，且 Qwen 判定 `AWAY_FROM_CAMERA` | `CONTINUE` |
 | 只偵測到一人，Qwen 判定 `STATIONARY`，且未裁切的人框面積不超過 `QWEN_FAR_BOX_AREA_RATIO`（預設 10%） | `CONTINUE` |
@@ -19,6 +19,8 @@ Qwen3-VL 以同一來源最近三張 RGB 影格判讀方向，YOLO 在最新一�
 | 影格不足、回覆無效或結果過期 | `DATA_LOSS` |
 
 框面積是單眼影像中的遠近代理，以上為觀測用門檻。模型切換、來源改變或影格時間不連續時會重新收集影格。相機與結果仍由既有 adapter 檢查時效。
+
+Monitor 顯示四種速度設定。隔離模擬的底盤閘門在許可有效時，依 `CONTINUE` 使用 40%、依 `DANGER_WARNING` 使用 10%，比例以原本限幅後的速度請求為基準。`OBSERVE` 燈顯示 30% 模式設定；證據不足或過期時亮此燈，健康仍顯示 `DATA_LOSS`（若已失效），運動遭拒絕時輸出 0%。`STOP` 請求停止，維持本機 HOLD 規則。
 
 ## 啟動 Qwen3-VL
 
