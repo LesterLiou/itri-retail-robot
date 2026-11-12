@@ -3,6 +3,7 @@ from collections import deque
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import threading
 import time
@@ -14,6 +15,7 @@ import torch
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration, StoppingCriteriaList
 
 from lightweight_risk_vqa.robot_vqa import MOTIONS, json_object_end
+from lightweight_risk_vqa.camera_policy import PersonBoxDetector
 
 
 PROMPT = (
@@ -45,12 +47,20 @@ def parse_motion(raw):
     return result
 
 
-def motion_advisory(parsed):
+def motion_advisory(parsed, boxes, box_area, far_area, stop_area):
+    if box_area is not None and box_area >= stop_area:
+        return 'STOP', f'Largest person box covers {box_area:.1%} of the image (threshold {stop_area:.0%}).'
     if parsed is None:
         return 'DATA_LOSS', ''
     if parsed['motion'] == 'TOWARD_CAMERA':
         return 'DANGER_WARNING', 'Model detected movement toward the camera.'
-    return 'OBSERVE', 'Direction alone does not establish that the path is clear.'
+    if parsed['motion'] == 'AWAY_FROM_CAMERA' and box_area is not None:
+        return 'CONTINUE', 'Model detected movement away from the camera.'
+    if parsed['motion'] == 'STATIONARY' and len(boxes) == 1 and box_area <= far_area:
+        x1, y1, x2, y2 = boxes[0]
+        if 0 < x1 < x2 < 1 and 0 < y1 < y2 < 1:
+            return 'CONTINUE', f'One stationary person with an unclipped box covering {box_area:.1%} of the image.'
+    return 'OBSERVE', 'Motion or person size does not meet the criteria for a direction-based advisory.'
 
 
 class Qwen3VLBackend:
@@ -72,6 +82,11 @@ class Qwen3VLBackend:
         self.history = {}
         self.device = device
         self.decode_frame = decode_frame
+        self.stop_area = float(os.environ.get('QWEN_STOP_BOX_AREA_RATIO', '0.90'))
+        self.far_area = float(os.environ.get('QWEN_FAR_BOX_AREA_RATIO', '0.10'))
+        if not 0 < self.far_area < self.stop_area <= 1:
+            raise ValueError('Qwen person-box thresholds must satisfy 0 < far < stop <= 1')
+        self.person_detector = PersonBoxDetector(os.environ.get('YOLO_WEIGHTS', '/models/yolov8n.pt'), str(device))
         dtype = torch.bfloat16 if device.type == 'cuda' else torch.float32
         self.model = Qwen3VLForConditionalGeneration.from_pretrained(
             checkpoint, local_files_only=True, dtype=dtype, attn_implementation='sdpa',
@@ -84,7 +99,11 @@ class Qwen3VLBackend:
         camera, stamp, epoch = data['camera_id'], float(data['stamp']), data['source_epoch']
         if not math.isfinite(stamp) or data.get('inference_mode', 'vqa-only') != 'vqa-only':
             raise ValueError('Qwen3-VL requires a finite capture timestamp and vqa-only input')
-        image = Image.fromarray(cv2.cvtColor(self.decode_frame(data), cv2.COLOR_BGR2RGB))
+        frame = self.decode_frame(data)
+        boxes = self.person_detector.detect(frame)
+        box_area = max(((x2 - x1) * (y2 - y1) for x1, y1, x2, y2 in boxes), default=None)
+        oversized = box_area is not None and box_area >= self.stop_area
+        image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         image.thumbnail((384, 288), Image.Resampling.BILINEAR)
         previous_epoch, frames = self.history.get(camera, (None, ()))
         if previous_epoch != epoch or not frames or not 0 < stamp - frames[-1][0] <= MAX_GAP_SECONDS:
@@ -96,7 +115,7 @@ class Qwen3VLBackend:
         parsed = None
         tokens = 0
         reason = 'Qwen3-VL waiting for three consecutive camera frames'
-        if len(frames) == FRAME_COUNT:
+        if not oversized and len(frames) == FRAME_COUNT:
             content = [{'type': 'image', 'image': frame} for _, frame in frames]
             content.append({'type': 'text', 'text': PROMPT})
             inputs = self.processor.apply_chat_template(
@@ -120,17 +139,22 @@ class Qwen3VLBackend:
             reason = '' if parsed else 'Qwen3-VL response failed the motion schema'
 
         elapsed = round((time.monotonic() - started) * 1000, 2)
-        action, policy_reason = motion_advisory(parsed)
-        evidence = parsed['evidence'] if parsed else ''
-        view = dict(parsed, explanation=evidence, policy_reason=policy_reason) if parsed else None
+        action, policy_reason = motion_advisory(parsed, boxes, box_area, self.far_area, self.stop_area)
+        valid = bool(parsed) or oversized
+        motion = parsed['motion'] if parsed else 'UNCERTAIN'
+        evidence = parsed['evidence'] if parsed else policy_reason
+        view = dict(motion=motion, evidence=evidence, explanation=evidence,
+                    policy_reason=policy_reason, largest_person_box_area_ratio=box_area) if valid else None
         return dict(
-            action=action, raw_action=action, valid=bool(parsed), reason=reason,
-            motion=parsed['motion'] if parsed else 'UNCERTAIN', observation='', explanation=evidence,
+            action=action, raw_action=action, valid=valid, reason='' if valid else reason,
+            motion=motion, observation='', explanation=evidence,
             raw=json.dumps(view, ensure_ascii=False) if view else raw, model_raw=raw,
             model_id=self.model_id, prompt_id=self.prompt_id, worker_id=self.worker_id,
             model_backend=self.model_backend, stamp=stamp, camera_id=camera,
             inference_mode='qwen3-vl-observe', inference_ms=elapsed, generation_tokens=tokens,
             decoding_profile='motion-json', generation_engine='hf-native',
             history_capture_stamps=[captured_at for captured_at, _ in frames],
-            metrics=dict(inference_mode='qwen3-vl-observe', segmentation_enabled=False),
+            largest_person_box_area_ratio=box_area,
+            metrics=dict(inference_mode='qwen3-vl-observe', segmentation_enabled=False,
+                         bbox_source='yolo', person_boxes=boxes),
         )

@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='JPEG input for the isolated worker')
     parser.add_argument('--url', default='http://127.0.0.1:8090')
+    parser.add_argument('--expect-stop', action='store_true', help='Image contains an oversized detected person')
     args = parser.parse_args()
     jpeg = base64.b64encode(args.image.read_bytes()).decode()
     epoch = f'offline:{uuid.uuid4().hex}'
@@ -29,9 +30,11 @@ def main():
             result = json.load(response)
         assert result['stamp'] == stamp and result['model_id'] == health['model_id'], result
         assert len(result['history_capture_stamps']) == frame, result
-        if frame == 3:
-            expected_action = 'DANGER_WARNING' if result['motion'] == 'TOWARD_CAMERA' else 'OBSERVE'
-            assert result['valid'] and result['action'] == expected_action, result
+        if args.expect_stop:
+            assert result['valid'] and result['action'] == 'STOP', result
+            assert result['generation_tokens'] == 0 and result['largest_person_box_area_ratio'] is not None, result
+        elif frame == 3:
+            assert result['valid'] and result['action'] in ('OBSERVE', 'CONTINUE', 'DANGER_WARNING'), result
             assert json.loads(result['raw'])['policy_reason'], result
             assert result['model_raw'] and result['explanation'], result
         else:
