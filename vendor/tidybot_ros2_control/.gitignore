@@ -1,0 +1,19 @@
+.DS_Store
+__pycache__
+.ipynb_checkpoints
+*.un~
+*.swp
+build/
+install/
+log/
+
+# ROS bag recordings, including compressed storage files.
+rosbags/
+rosbag2_*/
+*.bag
+*.bag.*
+*.db3
+*.db3-*
+*.db3.*
+*.mcap
+*.mcap.*

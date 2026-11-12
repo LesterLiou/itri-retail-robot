@@ -1,0 +1,11 @@
+std_msgs/Header header
+string boot_id
+string task_id
+string phase
+string reason
+bool standstill
+bool enabled
+bool hardware
+string owner
+float64 distance
+geometry_msgs/Twist output

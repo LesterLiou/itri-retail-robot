@@ -1,0 +1,47 @@
+# Start the NUC base in navigation mode before the local gate and bridge.
+name: itri-navigation-live
+
+x-local-navigation: &local-navigation
+  image: itri-retail-robot:jazzy-tidybot-navigation
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.navigation
+    target: tidybot
+  pull_policy: never
+  init: true
+  network_mode: host
+  ipc: host
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment:
+    ROS_DOMAIN_ID: '0'
+    NAV_DOMAIN_ID: '84'
+    RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+    ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+    ROS_STATIC_PEERS: ${NAV_PEERS:-}
+    FASTDDS_BUILTIN_TRANSPORTS: ${NAV_TRANSPORT:-LARGE_DATA}
+
+services:
+  tidybot-bridge:
+    <<: *local-navigation
+    command: [python3, /opt/itri/navigation/bridge_config.py]
+  tidybot-drive:
+    <<: *local-navigation
+    volumes:
+      - type: bind
+        source: ./docker/tidybot-wait-for-driver.sh
+        target: /opt/itri/navigation/wait-for-driver
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [bash, /opt/itri/navigation/wait-for-driver, "${NAV_ALLOW_HARDWARE_MAP:-false}"]
+  thor-straight:
+    <<: *local-navigation
+    profiles: [thor-straight]
+    environment:
+      ROS_DOMAIN_ID: '84'
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+      ROS_STATIC_PEERS: ${NAV_PEERS:-}
+      FASTDDS_BUILTIN_TRANSPORTS: ${NAV_TRANSPORT:-LARGE_DATA}
+    command: [ros2, run, retail_core, thor_navigation]

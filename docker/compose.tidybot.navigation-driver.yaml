@@ -1,0 +1,13 @@
+# Use after the pinned upstream docker-compose.yml, on TidyBot only.
+services:
+  tidybot:
+    environment:
+      ROS_DOMAIN_ID: '0'
+    volumes:
+      - type: bind
+        source: ${NAV_INTEGRATION_ROOT}/docker/navigation/tidybot_driver.launch.py
+        target: /opt/tidybot_navigation_driver.launch.py
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [ros2, launch, /opt/tidybot_navigation_driver.launch.py]

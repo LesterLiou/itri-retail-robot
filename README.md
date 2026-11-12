@@ -47,92 +47,225 @@ make help
 
 切換模式前先完成／取消當前任務。Makefile 會處理相機與 sim 網路 namespace 的啟動順序。`make shell` 只進入目前容器，不切換模式。關閉 VQA 監看視窗只關閉 UI，ROS 感知會繼續運作。
 
-## 三台主機啟動與關閉｜TidyBot 相機、THOR VQA、5070 監看
+## 三台主機啟動與關閉
 
-依序啟動 **TidyBot 相機 → THOR 推論 → 5070 監看**。三台各自從整合 repo 啟動 Compose，使用 ROS 2 Jazzy、domain `84`。DDS peer 和相機裝置映射由各台本機 `.env` 提供。首次換機或 D435 重新枚舉時，參照 [跨機部署手冊](docs/CROSS_HOST_DEPLOYMENT.md)。
+| 功能 | 在哪台執行 | 專案根目錄 | Compose 入口 |
+|---|---|---|---|
+| 底盤驅動、手把與 CAN 初始化 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-base.yaml` |
+| 本機仲裁、程式授權與跨機橋接 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-standby.yaml` |
+| 兩公尺任務管理 | THOR | /home/hrc/itri-retail-robot | `compose.robot-standby.yaml` |
+| D435 相機 | TidyBot NUC | /home/hrc/itri-retail-robot | `compose.robot-observation.yaml` |
+| Qwen3-VL／YOLO 與 ROS adapter | THOR | /home/hrc/itri-retail-robot | `compose.robot-thor.yaml` |
+| VQA Monitor | RTX 5070 桌面 | /home/lester/obstacle_avoid | `compose.robot-observation.yaml` |
 
-這組服務用於影像與判斷監看。TidyBot 的搖桿和真機底盤控制由 domain `0` 的既有 `tidybot_ros2_control` 容器管理。
+只監看時依序開相機、THOR、5070。手動開底盤時可單獨執行第 1 節。底盤使用 ROS 2 domain 0，觀測鏈使用 Jazzy／domain 84。各台的 DDS peer、裝置與權重路徑使用本機 `.env`。各入口沿用既有的 Docker 專案名稱，可以單獨啟停列出的服務。
 
-### 1. TidyBot｜RealSense 相機
+### 1. TidyBot｜底盤與手把
 
-在 TidyBot 終端啟動 `tidybot-camera`：
+在 TidyBot NUC 終端執行。若本次已看到 `CANivore network initialized` 且 `can0` 為 `UP`，可跳過 `can-init`。主機重開或 CANivore 重新插拔後，先確認底盤停妥、底盤驅動已停止，再執行初始化。首次部署且底盤映像尚未建置時，先執行 `docker compose -f compose.robot-base.yaml build tidybot`。
 
 ```bash
 cd /home/hrc/itri-retail-robot
-unset OBSERVATION_PEERS
-docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  up -d --build tidybot-camera
+docker compose -f compose.robot-base.yaml config --services
+ls /dev/input/js*
+docker compose -f compose.robot-base.yaml run --rm can-init
 ```
 
-確認收到一幀 JPEG，應顯示 `tidybot_color_optical_frame` 和擷取時間：
+若曾在容器內手動啟動底盤 launch，先結束該程序。啟動手動模式並查看日誌：
 
 ```bash
-docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  exec tidybot-camera bash -c 'source /opt/ros/jazzy/setup.bash
-    timeout 10 ros2 topic echo /cameras/tidybot/color/image_raw/compressed \
-      sensor_msgs/msg/CompressedImage --once --field header --no-daemon \
-      --qos-reliability best_effort'
+cd /home/hrc/itri-retail-robot
+TIDYBOT_CONTROL_MODE=manual docker compose -f compose.robot-base.yaml up -d tidybot
+docker compose -f compose.robot-base.yaml logs --tail=60 -f tidybot
+```
+
+手把按 **Y** 授權手動控制，按住 **LB＋RB** 才能移動，鬆開肩鍵即撤回手動運動輸出。**Back** 解除手把授權。手把輸入是 `/joy`，手動 mux 經 `/tidybot/enable`、`/cmd_vel`、`/tidybot/control_frame` 接到底盤。要關閉底盤，先鬆開肩鍵、按 Back，並確認停妥。若有自動任務，先依導航流程取消任務、撤銷自動許可並確認停妥。`Ctrl+C` 可退出 `logs -f`，接著停止服務：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-base.yaml stop tidybot
+docker compose -f compose.robot-base.yaml ps -a tidybot
+```
+
+整合 repo 內的 [底盤驅動來源](vendor/tidybot_ros2_control/UPSTREAM.md) 隨 ITRI 版本一起部署。若要關閉早期版本的底盤，停妥後也可執行 `docker stop tidybot_ros2_control`。
+
+### 1.1 TidyBot｜程式控制待機
+
+首次部署本版時，先在 **TidyBot** 建置底盤及本機閘門映像，在 **THOR** 建置任務管理映像。兩台均從 `/home/hrc/itri-retail-robot` 執行：
+
+```bash
+# TidyBot NUC
+docker compose -f compose.robot-base.yaml build tidybot
+docker compose -f compose.robot-standby.yaml build tidybot-drive
+
+# THOR
+docker compose -f compose.robot-standby.yaml build thor-straight
+```
+
+手把單獨使用時選 `manual`。程式控制時選 `navigation`，底盤保留手把輸入，由 TidyBot 本機閘門仲裁手把與程式目標。先確認底盤停妥，再從 NUC 終端啟動：
+
+```bash
+cd /home/hrc/itri-retail-robot
+TIDYBOT_CONTROL_MODE=navigation docker compose -f compose.robot-base.yaml up -d tidybot
+docker compose -f compose.robot-standby.yaml up -d tidybot-bridge tidybot-drive
+docker compose -f compose.robot-standby.yaml logs --tail=60 tidybot-drive
+```
+
+閘門會等待底盤完成初始化及 DDS 探索。用以下唯讀指令檢查待機：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-standby.yaml exec -T tidybot-drive \
+  /opt/itri/navigation/entrypoint timeout 10 ros2 topic echo /drive/state \
+  retail_interfaces/msg/DriveState --once --no-daemon
+```
+
+`phase: IDLE`、`standstill: true`、`enabled: false` 表示已停妥且等待新目標。自動授權仍需要實體互鎖 `/tidybot/auto_interlock`、有效里程計、VQA，以及單一控制來源。Y 只授權手把。Back 或 Xbox／Guide 會撤回手把授權並要求停止，容器可繼續查狀態。
+
+若要接既有的 2 公尺直行程式，在 THOR 的根目錄啟動下列服務。先開相機與 THOR 推論，並確認 domain 84 只有一套任務控制器；正在使用 Nav2 任務控制器時沿用它。
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-standby.yaml up -d thor-straight
+```
+
+現場人員確認雙臂收納、實體防護與直行路徑後，在 **TidyBot NUC** 執行：
+
+```bash
+cd /home/hrc/itri-retail-robot
+scripts/tidybot-forward-2m
+```
+
+腳本會讀取待機狀態、呼叫本機 `/drive/arm_auto` 並向 THOR 提交 `/mission/straight_2m`。啟動無需手把 Y。若互鎖、里程計或 VQA 未就緒，腳本會顯示拒絕原因。執行時會顯示距離、實際下發的速度和原因，收到測得停妥的 `DONE` 才算完成。按 `Ctrl+C` 時會請求本機撤權並等待停妥回饋。
+
+| 有效 VQA 建議 | 兩公尺任務速度 |
+|---|---|
+| `CONTINUE` 或 `NO_DETECT` | 原直行速度的 40% |
+| `DANGER_WARNING` | 原直行速度的 10% |
+| `STOP`、`OBSERVE`、`DATA_LOSS` 或結果過期 | 0%，撤回運動許可並進入 `HOLD` |
+
+本機用 `/odom` 量測沿啟動方向的位移。長時間降速可能先達到原有 90 秒任務上限，此時停車並回報 `HOLD`。排除故障且確認停妥後，用下列指令解除 `HOLD` 或 `REJECTED`，然後重新執行腳本：
+
+```bash
+docker compose -f compose.robot-standby.yaml exec -T tidybot-drive \
+  /opt/itri/navigation/entrypoint ros2 service call /drive/reset_hold \
+  std_srvs/srv/Trigger '{}'
+```
+
+**關閉待機**　先取消目標、撤銷自動許可並確認停妥。TidyBot 上停止閘門、橋接與底盤：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-standby.yaml exec -T tidybot-drive \
+  /opt/itri/navigation/entrypoint ros2 service call /drive/arm_auto \
+  std_srvs/srv/SetBool '{data: false}'
+# 透過 /drive/state 確認 standstill: true、enabled: false 後再停止。
+docker compose -f compose.robot-standby.yaml stop tidybot-drive tidybot-bridge
+docker compose -f compose.robot-base.yaml stop tidybot
+```
+
+若另開了 THOR 的直行程式，在 THOR 執行：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-standby.yaml stop thor-straight
+```
+
+### 1.2 底盤故障與復原
+
+若低電壓、CAN 或任一必要節點錯誤造成 ROS launch 結束，tidybot 容器會保留並顯示 `unhealthy`，停止後的控制鏈等待人工復原。Docker 的 `healthy` 表示 launch 程序存活；底盤待機另看 `/drive/state`。查故障：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-base.yaml ps -a tidybot
+docker compose -f compose.robot-base.yaml exec -T tidybot cat /tmp/tidybot-launch-status
+docker compose -f compose.robot-base.yaml logs --tail=100 tidybot
+```
+
+11.30 V 會觸發既有 11.5 V 低壓保護。先依現場程序充電或更換電池，確認供電及 CAN 正常。若先前在程式控制模式，先停止閘門以清除舊工作階段，再重啟底盤和閘門：
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-standby.yaml stop tidybot-drive tidybot-bridge
+TIDYBOT_CONTROL_MODE=navigation docker compose -f compose.robot-base.yaml up -d --force-recreate tidybot
+docker compose -f compose.robot-standby.yaml up -d tidybot-bridge tidybot-drive
+```
+
+手把模式則用 `TIDYBOT_CONTROL_MODE=manual docker compose -f compose.robot-base.yaml up -d --force-recreate tidybot`。重啟後重新確認待機，再依操作流程重新授權及送新目標。
+
+### 2. TidyBot｜D435 相機
+
+```bash
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-observation.yaml up -d tidybot-camera
+docker compose -f compose.robot-observation.yaml logs --tail=60 tidybot-camera
+```
+
+確認有近期 JPEG：
+
+```bash
+docker compose -f compose.robot-observation.yaml exec tidybot-camera bash -c '
+  source /opt/ros/jazzy/setup.bash
+  timeout 10 ros2 topic echo /cameras/tidybot/color/image_raw/compressed \
+    sensor_msgs/msg/CompressedImage --once --field header --no-daemon \
+    --qos-reliability best_effort'
 ```
 
 關閉相機：
 
 ```bash
-docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  stop tidybot-camera
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-observation.yaml stop tidybot-camera
 ```
 
-### 2. THOR｜VQA adapter 與 GPU worker
+首次建置相機或相機裝置重新枚舉時，參照 [跨機部署手冊](docs/CROSS_HOST_DEPLOYMENT.md)。
 
-在 THOR 終端啟動 `thor-adapter` 和 `vqa-worker`，依提示輸入本機 `sudo` 密碼：
+### 3. THOR｜Qwen3-VL／YOLO
 
 ```bash
 cd /home/hrc/itri-retail-robot
-unset OBSERVATION_PEERS
-sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  up -d --build --wait vqa-worker thor-adapter
+docker compose -f compose.robot-thor.yaml up -d --wait --wait-timeout 120 vqa-worker thor-adapter
 curl -fsS http://127.0.0.1:8090/health
+docker compose -f compose.robot-thor.yaml logs --tail=60 vqa-worker thor-adapter
 ```
 
-`ready: true` 表示 GPU 啟動檢查通過且模型已載入。查看推論日誌：
+預期健康回應含 `ready: true` 與 `model_backend: qwen3-vl`。`thor-adapter` 將判斷發布到 `/perception/vqa/tidybot`。首次安裝且本機缺少映像時，依序執行下列建置指令，再回到上方啟動。權重與模型切換見 [THOR 模型切換](docs/THOR_VQA_MODELS.md)。
 
 ```bash
-sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  logs --tail=60 vqa-worker thor-adapter
+docker compose -f compose.robot-observation.yaml build vqa-worker
+docker compose -f compose.robot-thor.yaml build vqa-worker thor-adapter
 ```
 
-要在 THOR 比較原生 Qwen3-VL 與原 ConvLSTM，依 [THOR 模型切換與回放](docs/THOR_VQA_MODELS.md) 選擇 Compose 設定並核對目前模型。
-
-關閉推論服務：
+關閉 THOR 推論：
 
 ```bash
-sudo docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  stop thor-adapter vqa-worker
+cd /home/hrc/itri-retail-robot
+docker compose -f compose.robot-thor.yaml stop thor-adapter vqa-worker
 ```
 
-### 3. 5070｜VQA Monitor
+### 4. RTX 5070｜VQA Monitor
 
-在 5070 **桌面終端**開啟 `monitor-5070`，畫面會顯示 TidyBot RGB、THOR 判斷、理由與原始回傳：
+在 5070 **桌面終端**執行。已有監看視窗時，先關閉舊視窗。
 
 ```bash
 cd /home/lester/obstacle_avoid
-unset OBSERVATION_PEERS
 make gui-setup
-docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  run --rm --no-deps --build monitor-5070
+docker compose -f compose.robot-observation.yaml \
+  run --rm --no-deps --name itri-vqa-monitor-5070 monitor-5070
 ```
 
-**關閉**時直接關掉視窗，或在啟動它的終端按 `Ctrl+C`。如果監看容器先前以名稱 `itri-vqa-monitor-5070` 在背景啟動，可執行 `docker stop itri-vqa-monitor-5070`。只關閉 5070 監看時，TidyBot 與 THOR 可繼續運行。
-
-在 5070 終端直接核對回傳，可按 `Ctrl+C` 停止監聽：
+關閉視窗、按 `Ctrl+C`，或在另一個終端執行 `docker stop itri-vqa-monitor-5070`。確認 5070 收到新鮮的推論結果時，可用下列指令檢查 `valid: true`、`synthetic: false` 及 `header.stamp`：
 
 ```bash
-docker compose --project-directory . -f docker/compose.cross-host.yaml \
-  run --rm --no-deps --build observer-5070 \
-  ros2 topic echo /perception/vqa/tidybot \
-    retail_interfaces/msg/RiskAdvisory --no-daemon
+docker compose -f compose.robot-observation.yaml run --rm --no-deps observer-5070 \
+  ros2 topic echo /perception/vqa/tidybot retail_interfaces/msg/RiskAdvisory --no-daemon
 ```
 
-收到近期的 `header.stamp`、`valid: true` 和 `synthetic: false`，即確認 TidyBot 影像經 THOR 推論後已回傳到 5070。整套關閉時可依序關掉 **5070 監看 → THOR 推論 → TidyBot 相機**。
+三台只關閉觀測鏈時，依序關閉 5070、THOR、D435。若底盤也在使用，先依第 1 節撤銷運動許可、確認停妥並關閉底盤。
+
+### 5. 5070 選點、THOR Nav2、TidyBot 底盤
+
+地圖導航 Compose 與測試結果見 [三機導航驗收](docs/validation/2026-11-12-three-host-navigation.md)。地圖模式需先驗收定位、場地地圖及即時障礙掃描，再明確啟用地圖導航。
 
 ## 合併 TidyBot 與 OpenArm
 

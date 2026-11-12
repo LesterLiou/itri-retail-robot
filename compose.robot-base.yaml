@@ -1,0 +1,7 @@
+# Root entry for the TidyBot driver snapshot shipped with the integration repo.
+name: tidybot-ros2-control
+include:
+  - path:
+      - vendor/tidybot_ros2_control/docker-compose.yml
+      - vendor/tidybot_ros2_control/compose.control.yaml
+    project_directory: vendor/tidybot_ros2_control

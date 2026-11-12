@@ -17,5 +17,9 @@ setup(name='retail_core', version='0.1.0', packages=['retail_core'],
           'reconstruction_adapter = retail_core.reconstruction:main',
           'mission_manager = retail_core.mission:main',
           'demo_control = retail_core.demo_control:main',
+          'tidybot_drive = retail_core.tidybot_drive:main',
+          'thor_navigation = retail_core.thor_navigation:main',
+          'tidybot_odom_tf = retail_core.tidybot_drive:odom_tf_main',
+          'nav_risk_fixture = retail_core.nav_risk_fixture:main',
       ]})
 

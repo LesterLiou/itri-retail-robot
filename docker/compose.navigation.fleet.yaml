@@ -1,0 +1,15 @@
+# Explicitly opt in to real network discovery; fake services still map no devices.
+x-host: &host
+  network_mode: host
+  ipc: host
+  environment:
+    FASTDDS_BUILTIN_TRANSPORTS: ${NAV_TRANSPORT:-UDPv4}
+services:
+  fake-base: *host
+  fake-drive: *host
+  fake-bridge: *host
+  fake-risk: *host
+  thor-nav: *host
+  tools-5070: *host
+  rviz-5070: *host
+  panel-5070: *host

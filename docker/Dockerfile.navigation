@@ -1,0 +1,37 @@
+FROM ros:jazzy-ros-base-noble@sha256:8eed0a4669bbf43ee331878a4c39bd8ebddea8e3312a58b4fae8edb14526b617 AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-rmw-fastrtps-cpp ros-jazzy-domain-bridge ros-jazzy-nav2-msgs \
+    ros-jazzy-visualization-msgs python3-numpy python3-yaml \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM runtime AS thor-runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-nav2-bringup && rm -rf /var/lib/apt/lists/*
+
+FROM runtime AS rviz-runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-jazzy-rviz2 libgl1-mesa-dri python3-pyqt5 && rm -rf /var/lib/apt/lists/*
+
+FROM runtime AS workspace
+WORKDIR /opt/navigation
+COPY ros2_ws/src/retail_interfaces src/retail_interfaces
+COPY ros2_ws/src/retail_core src/retail_core
+RUN . /opt/ros/jazzy/setup.sh && colcon build --merge-install --packages-select retail_interfaces retail_core
+
+FROM runtime AS tidybot
+COPY --from=workspace /opt/navigation/install /opt/navigation/install
+COPY docker/navigation /opt/itri/navigation
+COPY ros2_ws/src/retail_bringup/maps /opt/itri/maps
+ENTRYPOINT ["/opt/itri/navigation/entrypoint"]
+
+FROM thor-runtime AS thor
+COPY --from=workspace /opt/navigation/install /opt/navigation/install
+COPY docker/navigation /opt/itri/navigation
+COPY ros2_ws/src/retail_bringup/maps /opt/itri/maps
+COPY ros2_ws/src/retail_bringup/config/nav*.xml ros2_ws/src/retail_bringup/config/nav2.yaml /opt/itri/navigation/
+ENTRYPOINT ["/opt/itri/navigation/entrypoint"]
+
+FROM rviz-runtime AS desktop
+COPY --from=workspace /opt/navigation/install /opt/navigation/install
+COPY docker/navigation /opt/itri/navigation
+ENTRYPOINT ["/opt/itri/navigation/entrypoint"]

@@ -1,0 +1,164 @@
+name: tidybot-ros2-control
+
+services:
+  # Phoenix uses CTRE's matching host utilities to apply the CANivore's fixed
+  # CAN FD timings. This short-lived service is the only one with NET_ADMIN;
+  # the long-running robot controller cannot administer the host network.
+  can-init:
+    image: tidybot_ros2_control:jazzy-noble
+    network_mode: host
+    privileged: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    pids_limit: 64
+    environment:
+      TIDYBOT_CAN_INTERFACE: ${TIDYBOT_CAN_INTERFACE:-can0}
+      PYTHONUNBUFFERED: "1"
+      HOME: /tmp
+    volumes:
+      - type: bind
+        source: /usr/bin/canivore_setup
+        target: /usr/bin/canivore_setup
+        read_only: true
+      - type: bind
+        source: /usr/bin/canivore_shutdown
+        target: /usr/bin/canivore_shutdown
+        read_only: true
+    tmpfs:
+      - /tmp:exec,mode=1777
+      - /run:mode=755
+    command: ["tidybot-can-init"]
+    restart: "no"
+
+  tidybot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tidybot_ros2_control:jazzy-noble
+    container_name: tidybot_ros2_control
+
+    # SocketCAN interfaces live in a network namespace. Host networking makes
+    # the can-init-initialized can0 visible and supports ROS 2 DDS discovery.
+    network_mode: host
+
+    # The container can transmit CAN frames and request the existing 250 Hz
+    # control thread's real-time scheduling. It cannot load kernel modules,
+    # mount filesystems, inspect host PIDs, or administer the host network.
+    privileged: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - SYS_NICE
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    pids_limit: 512
+    ulimits:
+      rtprio: 99
+      memlock: -1
+
+    environment:
+      DISPLAY: ${DISPLAY:-}
+      QT_X11_NO_MITSHM: "1"
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      TIDYBOT_CAN_INTERFACE: ${TIDYBOT_CAN_INTERFACE:-can0}
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+
+    # USB access is needed by the D415 and USB CAN adapters. /dev/input is
+    # needed by joy_node. Host /dev is visible read-only under /host-dev so the
+    # entrypoint can follow V4L2 renumbering, while cgroups allow access only to
+    # input, V4L2, USB, and media-controller device classes.
+    volumes:
+      - type: bind
+        source: /dev
+        target: /host-dev
+        read_only: true
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+      - type: bind
+        source: /dev/input
+        target: /dev/input
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+        read_only: true
+      - type: bind
+        source: ./rosbags
+        target: /home/tidybot/jerry/tidybot_ros2_control/rosbags
+      - type: volume
+        source: tidybot_ros_home
+        target: /home/tidybot/.ros
+    device_cgroup_rules:
+      - "c 13:* rwm"   # Linux input/event and joystick devices
+      - "c 81:* rwm"   # Video4Linux devices
+      - "c 189:* rwm"  # USB devices
+      - "c 239:* rwm"  # Media-controller devices on this NUC
+    tmpfs:
+      - /tmp:exec,mode=1777
+      - /run:mode=755
+
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 20s
+    working_dir: /opt/tidybot_ws
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+  # Independent low-priority service for reading the Emirai phone display.
+  # It has camera access but no CAN, gamepad, NET_RAW, or real-time privilege.
+  battery-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tidybot_ros2_control:jazzy-noble
+    container_name: tidybot_battery_monitor
+    network_mode: host
+    privileged: false
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    pids_limit: 256
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_LOCALHOST_ONLY: ${ROS_LOCALHOST_ONLY:-0}
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - type: bind
+        source: /dev
+        target: /host-dev
+        read_only: true
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+      - type: volume
+        source: tidybot_ros_home
+        target: /home/tidybot/.ros
+    device_cgroup_rules:
+      - "c 81:* rwm"   # Video4Linux devices
+      - "c 189:* rwm"  # USB devices
+      - "c 239:* rwm"  # Media-controller devices on this NUC
+    tmpfs:
+      - /tmp:exec,mode=1777
+      - /run:mode=755
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    command: ["ros2", "launch", "tidybot_ros2_control", "tidybot_battery_monitor.launch.py"]
+    restart: unless-stopped
+
+volumes:
+  tidybot_ros_home:

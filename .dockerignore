@@ -1,6 +1,8 @@
 **
 !docker/Dockerfile
 !docker/
+!docker/navigation/
+!docker/navigation/**
 !docker/ros_smoke.py
 !docker/setup.bash
 !docker/entrypoint.bash

@@ -1,0 +1,154 @@
+name: itri-navigation
+x-ros: &ros
+  RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+  ROS_AUTOMATIC_DISCOVERY_RANGE: SUBNET
+  ROS_STATIC_PEERS: ${NAV_PEERS:-}
+  FASTDDS_BUILTIN_TRANSPORTS: UDPv4
+  ROS_DOMAIN_ID: ${NAV_DOMAIN_ID:-85}
+x-node: &node
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: *ros
+x-tidybot-image: &tidybot-image
+  image: itri-retail-robot:jazzy-tidybot-navigation
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.navigation
+    target: tidybot
+x-thor-image: &thor-image
+  image: itri-retail-robot:jazzy-thor-navigation
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.navigation
+    target: thor
+x-local-fake: &local-fake
+  <<: [*node, *tidybot-image]
+  profiles: [fake]
+  environment:
+    <<: *ros
+    ROS_DOMAIN_ID: ${FAKE_BASE_DOMAIN_ID:-86}
+    NAV_DOMAIN_ID: ${NAV_DOMAIN_ID:-85}
+x-local-hardware: &local-hardware
+  <<: [*node, *tidybot-image]
+  network_mode: host
+  ipc: host
+  environment:
+    <<: *ros
+    ROS_DOMAIN_ID: '0'
+    FASTDDS_BUILTIN_TRANSPORTS: LARGE_DATA
+    NAV_DOMAIN_ID: '84'
+
+networks:
+  default:
+    internal: true
+
+services:
+  fake-base:
+    <<: *local-fake
+    command: [ros2, run, retail_core, fake_base]
+  fake-drive:
+    <<: *local-fake
+    command: [ros2, run, retail_core, tidybot_drive]
+  fake-bridge:
+    <<: *local-fake
+    command: [python3, /opt/itri/navigation/bridge_config.py]
+  fake-risk:
+    <<: [*node, *tidybot-image]
+    profiles: [fake]
+    command: [ros2, run, retail_core, nav_risk_fixture]
+  thor-nav:
+    <<: [*node, *thor-image]
+    profiles: [fake]
+    environment:
+      <<: *ros
+      NAV_MAP_FILE: /opt/itri/maps/shop.yaml
+    command: [ros2, launch, /opt/itri/navigation/thor.launch.py]
+  tools-5070:
+    <<: [*node, *tidybot-image]
+    profiles: [tools]
+    command: [ros2, topic, echo, /mission/state]
+  rviz-5070: &desktop
+    <<: *node
+    profiles: [desktop]
+    image: itri-retail-robot:jazzy-navigation-desktop
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.navigation
+      target: desktop
+    environment:
+      <<: *ros
+      DISPLAY: ${DISPLAY:-}
+      XAUTHORITY: /run/rviz.Xauthority
+      QT_X11_NO_MITSHM: '1'
+      QT_QPA_PLATFORM: xcb
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - type: bind
+        source: ./config/local/gui.Xauthority
+        target: /run/rviz.Xauthority
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [rviz2, -d, /opt/itri/navigation/5070.rviz]
+  panel-5070:
+    <<: *desktop
+    command: [python3, /opt/itri/navigation/operator_panel.py]
+  tidybot-bridge:
+    <<: *local-hardware
+    profiles: [hardware]
+    command: [python3, /opt/itri/navigation/bridge_config.py]
+  tidybot-drive:
+    <<: *local-hardware
+    profiles: [hardware]
+    command: [/opt/itri/navigation/hardware-drive, "${NAV_ALLOW_HARDWARE_MAP:-false}"]
+  tidybot-preflight:
+    <<: *local-hardware
+    profiles: [preflight]
+    command: [python3, /opt/itri/navigation/check_hardware_graph.py, --audit, "${NAV_PREFLIGHT_MODE:-map}"]
+  tidybot-odom-tf:
+    <<: *local-hardware
+    profiles: [odom-tf]
+    command: [ros2, run, retail_core, tidybot_odom_tf]
+  thor-straight:
+    <<: [*node, *tidybot-image]
+    network_mode: host
+    ipc: host
+    profiles: [thor-straight]
+    environment:
+      <<: *ros
+      ROS_DOMAIN_ID: '84'
+      FASTDDS_BUILTIN_TRANSPORTS: LARGE_DATA
+    command: [ros2, run, retail_core, thor_navigation]
+  thor-map:
+    <<: [*node, *thor-image]
+    network_mode: host
+    ipc: host
+    profiles: [thor-map]
+    environment:
+      <<: *ros
+      ROS_DOMAIN_ID: '84'
+      FASTDDS_BUILTIN_TRANSPORTS: LARGE_DATA
+      NAV_MAP_FILE: /run/nav-map/map.yaml
+      NAV_FOOTPRINT: ${NAV_FOOTPRINT:-}
+      NAV_LIVE_MAP: 'true'
+    volumes:
+      - type: bind
+        source: ./config/local/nav-map
+        target: /run/nav-map
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [ros2, launch, /opt/itri/navigation/thor.launch.py]
+  thor-vqa-fake-relay:
+    <<: [*node, *tidybot-image]
+    network_mode: host
+    ipc: host
+    profiles: [live-vqa-fake]
+    environment:
+      <<: *ros
+      ROS_DOMAIN_ID: '84'
+      FASTDDS_BUILTIN_TRANSPORTS: LARGE_DATA
+      NAV_DOMAIN_ID: ${NAV_DOMAIN_ID:-85}
+    command: [python3, /opt/itri/navigation/vqa_relay.py]

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+if (( $# != 0 )); then
+    echo 'Usage: scripts/tidybot-forward-2m (on the TidyBot NUC)' >&2
+    exit 2
+fi
+exec flock -n "${XDG_RUNTIME_DIR:-/tmp}/itri-tidybot-forward-2m.lock" \
+    docker compose -f compose.robot-standby.yaml exec tidybot-drive \
+    /opt/itri/navigation/entrypoint python3 /opt/itri/navigation/forward_2m.py

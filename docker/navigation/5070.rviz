@@ -1,0 +1,58 @@
+Panels:
+- Class: rviz_common/Displays
+  Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+  - Class: rviz_default_plugins/Map
+    Name: Navigation map
+    Enabled: true
+    Topic:
+      Value: /map
+      Durability Policy: Transient Local
+      Reliability Policy: Reliable
+  - Class: rviz_default_plugins/Map
+    Name: Local costmap
+    Enabled: true
+    Alpha: 0.45
+    Color Scheme: costmap
+    Topic:
+      Value: /thor/local_costmap/costmap
+      Durability Policy: Transient Local
+      Reliability Policy: Reliable
+  - Class: rviz_default_plugins/Path
+    Name: THOR path
+    Enabled: true
+    Topic:
+      Value: /thor/plan
+  - Class: rviz_default_plugins/Odometry
+    Name: TidyBot odometry
+    Enabled: true
+    Keep: 1
+    Topic:
+      Value: /odom
+  - Class: rviz_default_plugins/Marker
+    Name: TidyBot gate
+    Enabled: true
+    Marker Topic:
+      Value: /tidybot/drive_marker
+  - Class: rviz_default_plugins/Marker
+    Name: THOR VQA
+    Enabled: true
+    Marker Topic:
+      Value: /tidybot/vqa_marker
+  Enabled: true
+  Global Options:
+    Fixed Frame: map
+  Tools:
+  - Class: rviz_default_plugins/Interact
+  - Class: rviz_default_plugins/MoveCamera
+  - Class: rviz_default_plugins/SetGoal
+    Topic: /mission/goal_pose
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Top down
+      Scale: 95
+      X: 1
+      Y: 0

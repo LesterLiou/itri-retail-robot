@@ -1,0 +1,5 @@
+# Root entry for TidyBot RGB and the 5070 desktop monitor.
+name: itri-cross-host
+include:
+  - path: docker/compose.cross-host.yaml
+    project_directory: .
